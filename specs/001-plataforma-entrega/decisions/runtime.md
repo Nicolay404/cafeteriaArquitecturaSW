@@ -41,3 +41,22 @@ Con shims temporales, typecheck raíz y cinco proyectos con fuentes pasaron; con
 
 
 Actualización de ubicación: la solicitud de reorganización sitúa fuentes/configuración en proyecto/, sin cambiar Git ni agentes. Las rutas y comandos históricos de esta decisión se interpretaban antes del traslado; consultar README.md y evidence/workspace-reorganization.md para ubicaciones/verificación actual. Nueva ventana de edición limitada a traslado, rutas, documentación y chequeos existentes; sin tareas adicionales.
+
+## Dependencias de pruebas T009–T010 — 2026-11-17
+
+Autorizadas por el usuario para este bloque. En devDependencies de proyecto/package.json porque la suite compartida vive en proyecto/tests/integration; no son dependencias runtime de API/worker ni se instalaron globalmente. pnpm 12.21.0, Node 24.22.1 y TypeScript 5.9.3 se conservan.
+
+| Dependencia exacta | Justificación |
+|---|---|
+| jest / @jest/globals 30.5.2 | Runner de integración y funciones/tipos explícitos, sin globals implícitos |
+| ts-jest 29.4.15 | Transformar TS de las suites en ESM; peers admiten Jest 30 y TypeScript 5.9 |
+| testcontainers 12.2.1 | Contenedores reales, esperas, puertos dinámicos y limpieza; requiere Node >=22.22 |
+| pg / @types/pg 8.23.1 | SQL parametrizado y tipos para probar Postgres real |
+| redis 6.3.1 | Cliente real con reconexión desactivada para observar caída y recuperación |
+| amqplib 2.4.0 | Confirmación AMQP, correlación, ack y recursos exclusivos; incluye sus propios tipos |
+
+Versiones/engines/peers consultados en metadatos públicos del registro npm mediante npm.cmd view; instalación y lockfile exclusivamente con pnpm. No se añadió ts-node: Jest instalado carga jest.config.ts con el soporte TS nativo de Node 24; ts-jest transforma las suites. Se usa --experimental-vm-modules porque Jest mantiene ESM experimental; no se oculta su advertencia. esModuleInterop solo en tsconfig de integración. No cambia el stack runtime ni se elige ORM.
+
+pnpm agregó automáticamente una exclusión exacta de antigüedad para amqplib@2.4.0, siguiendo su política configurada para versiones seleccionadas; no se deshabilitó globalmente minimumReleaseAge ni la verificación de suministro. Se eliminó @types/amqplib porque 2.4.0 ya trae tipos. La instalación congelada posterior pasó con el SHA256 del lockfile inalterado: 8795E998009D5F3F745432B66B39B855120B3A292F8FBD5A8E274879E9765E4F.
+
+Jest: [configuración](https://jestjs.io/docs/configuration), [ESM](https://jestjs.io/docs/ecmascript-modules). Testcontainers: [ciclo de vida y reinicio](https://node.testcontainers.org/features/containers/), [esperas](https://node.testcontainers.org/features/wait-strategies/). La prueba detectó que los puertos pueden cambiar al reiniciar: las URLs del fixture usan getters; RabbitMQ espera check_running y check_port_connectivity, no solo ping del proceso Erlang. Estos ajustes son del arnés aislado de T010, no de T007.
