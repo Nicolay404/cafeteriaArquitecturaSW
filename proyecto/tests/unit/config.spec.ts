@@ -85,4 +85,22 @@ describe('explicit environment configuration', () => {
     expect(result.stderr).toContain('DATABASE_URL');
     expect(result.stdout + result.stderr).not.toContain('SECRET_SENTINEL');
   });
+
+  it('env:check loads an explicit shared file for all services without ambient values', () => {
+    const environment = Object.fromEntries(
+      Object.entries(process.env).filter(([key]) => !(key in example)),
+    );
+    const result = spawnSync(
+      process.execPath,
+      ['--import', 'tsx', 'scripts/env-check.ts', '--env-file', '.env.example'],
+      {
+        cwd: fileURLToPath(new URL('../../', import.meta.url)),
+        env: environment,
+        encoding: 'utf8',
+      },
+    );
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain('API, worker y web');
+    expect(result.stdout + result.stderr).not.toContain('solo_pruebas_locales');
+  });
 });

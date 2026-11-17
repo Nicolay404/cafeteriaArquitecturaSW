@@ -33,6 +33,8 @@
     "format:check": "prettier --check apps packages scripts tests package.json pnpm-workspace.yaml turbo.json tsconfig.json eslint.config.mjs .prettierrc.json",
     "env:check": "tsx scripts/env-check.ts",
     "test:config": "vitest run tests/unit/config.spec.ts",
-    "test:integration": "node --experimental-vm-modules node_modules/jest/bin/jest.js --config tests/integration/jest.config.ts --runInBand"
+    "test:integration": "node --experimental-vm-modules node_modules/jest/bin/jest.js --config tests/integration/jest.config.ts --runInBand",
+    "dev": "tsx scripts/dev.ts",
+    "infra:check": "tsx scripts/infra-check.ts"
   }
 }
