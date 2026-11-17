@@ -1,0 +1,2 @@
+# El workspace conserva LF incluso con core.autocrlf=true en Windows.
+proyecto/** text eol=lf
