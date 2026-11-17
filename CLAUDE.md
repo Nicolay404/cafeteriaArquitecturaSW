@@ -1,4 +1,5 @@
 # CLAUDE.md
+@AGENTS.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
@@ -31,7 +32,7 @@ Requisitos no funcionales que condicionan la arquitectura:
 ## Commits y despliegue
 
 - Commits **atómicos y reversibles** con Conventional Commits y el módulo como alcance (`feat(pedidos): ...`): un cambio lógico por commit, y cada commit debe compilar y pasar los tests por sí solo. Las migraciones siguen el patrón expand/contract (detalle en `promtp.md` §7).
-- Frontend (`apps/web`) en **Vercel**, backend (API + workers) en **Render** vía `render.yaml`. Solo el pipeline de GitHub Actions despliega; el despliegue automático por Git está desactivado.
+- Frontend (`proyecto/apps/web`) en **Vercel**, backend (API + workers) en **Render** vía `proyecto/render.yaml`. Solo el pipeline de GitHub Actions despliega; el despliegue automático por Git está desactivado.
 - El Quality Gate de **SonarQube** es obligatorio en cada PR; las métricas del pipeline y del equipo van a **Grafana** (§8–9).
 
 ## Restricción de stack
