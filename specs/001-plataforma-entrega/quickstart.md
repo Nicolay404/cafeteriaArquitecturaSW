@@ -1,6 +1,6 @@
 # Verificación desde clon limpio — Spec #1
 
-**Estado:** T001–T014 verificadas bajo `proyecto/`: configuración, Compose local, API de salud, worker técnico, inicio básico y proxy web runtime. Build web y suites locales probados; ver evidence/t011-health.md, evidence/t012-worker-pending.md y evidence/t013-t014-web.md. El arranque coordinado T015, E2E y cloud del flujo completo siguiente siguen pendientes. No desplegar desde equipos personales ni interpretar la base funcional como diseño final aprobado.
+**Estado:** T001–T015 verificadas bajo `proyecto/`: configuración, Compose local, API de salud, worker técnico, inicio básico y proxy web runtime. Build web y suites locales probados; ver evidence/t011-health.md, evidence/t012-worker-pending.md y evidence/t013-t014-web.md. El arranque coordinado y infra:check de T015 están disponibles; E2E y cloud del flujo completo siguiente siguen pendientes. No desplegar desde equipos personales ni interpretar la base funcional como diseño final aprobado.
 
 ## Prerrequisitos y configuración
 
@@ -64,10 +64,9 @@ Invoke-RestMethod http://localhost:3001/health
 Invoke-RestMethod http://localhost:3001/health/live
 Invoke-RestMethod http://localhost:3000/api/health
 Invoke-WebRequest http://localhost:3000/
-pnpm flags:set -- --key platform-demo --value true
 ```
 
-Esperado: cuatro dependencias sanas; API readiness/liveness 200, JSON conforme a `contracts/platform.md`; proxy refleja misma versión; web 200 con página/foto/textos aprobados. `infra:check` hace SELECT técnico, write/read/delete Redis y publish/consume RabbitMQ con correlación, sin datos de negocio. Flag técnico persiste al reiniciar apps y cambia sin reconstruir; no habilita pantalla nueva. Desactivar después con `--value false`.
+Esperado: cuatro dependencias sanas; API readiness/liveness 200, JSON conforme a `contracts/platform.md`; proxy refleja misma versión; web 200 con base semántica de T013; foto y diseño/textos finales aprobados siguen pendientes de T035–T040. `infra:check` hace SELECT técnico, write/read/delete Redis y publish/consume RabbitMQ con correlación, sin datos de negocio. El comando flags:set y su aceptación se implementarán en T050–T055; no ejecutarlo ni presentarlo disponible todavía.
 
 Detener solo el servicio Redis de Compose en el entorno de prueba: readiness pasa a 503, liveness sigue 200 y flag falla seguro. Reiniciarlo y comprobar recuperación. Repetir integración para Postgres y RabbitMQ con timeout, sin reiniciar indefinidamente aplicación por dependencia caída. Worker consume mensaje técnico una vez conforme al identificador de prueba y registra señal de actividad sin PII. No basta con que el contenedor exista.
 
@@ -132,7 +131,7 @@ node --env-file=.env.example --import tsx scripts/env-check.ts
 
 En Linux usar corepack en vez de corepack.cmd. Node/pnpm fijados por archivos del workspace. Si pnpm no está en PATH, Turbo requiere shims Corepack temporales descritos en README.md; no cambiar políticas/globales. pnpm puede requerir red para metadatos de seguridad aunque paquetes están en cache. No desactivar políticas para forzar offline. Resultados actuales de migración en evidence/workspace-reorganization.md, no inferidos de estos comandos.
 
-El bloque original de arranque es futuro: ejecutar desde proyecto/, donde está infra/compose.yaml (T007 verificada; consultar evidencia). Los scripts de aplicación van en proyecto/scripts/; los futuros scripts Git de historial/revert permanecen en scripts/ci/ desde raíz. .github/workflows/ se mantiene en raíz y deberá invocar trabajo de aplicación con cwd proyecto; rutas de checkout/cache empiezan proyecto/. Docker futuro contexto proyecto y despliegue apuntando proyecto/render.yaml, proyecto/vercel.json y proyecto/apps/web. Sin crear CI/Docker/cloud en esta reorganización.
+El bloque de arranque local ya está disponible: ejecutar desde proyecto/, donde está infra/compose.yaml (T007 verificada; consultar evidencia). Los scripts de aplicación van en proyecto/scripts/; los futuros scripts Git de historial/revert permanecen en scripts/ci/ desde raíz. .github/workflows/ se mantiene en raíz y deberá invocar trabajo de aplicación con cwd proyecto; rutas de checkout/cache empiezan proyecto/. Docker futuro contexto proyecto y despliegue apuntando proyecto/render.yaml, proyecto/vercel.json y proyecto/apps/web. Sin crear CI/Docker/cloud en esta reorganización.
 
 ## Compose disponible — T007
 
@@ -153,3 +152,27 @@ Se esperan Postgres, Redis, RabbitMQ y Mailpit sanos. `down` conserva los cuatro
 Si el CLI no se encuentra, falta Docker en PATH/instalación; si solo falla `docker compose version`, falta el plugin Compose. Si ambas versiones funcionan pero `docker info` no conecta al pipe `dockerDesktopLinuxEngine`, abrir Docker Desktop en Windows e iniciar el motor Linux; resolver los requisitos de WSL/virtualización indicados por Desktop si los hubiera. No reinstalar ni cambiar permisos automáticamente.
 
 En esta prueba el 5432 ya tenía un listener. Antes de `up`, se usó `$env:POSTGRES_PORT='55432'`; el contenedor sigue usando 5432 internamente. Al ejecutar aplicaciones futuras, ajustar también `DATABASE_URL` en su entorno a `postgresql://cafeteria_local:solo_pruebas_locales@127.0.0.1:55432/cafeteria_local`. La variable de puerto solo afecta Compose, no reescribe la URL de la API. No detener procesos ajenos. En una nueva terminal sin override se mantiene el puerto 5432 del plan.
+
+## Flujo T015 verificado sin crear .env privado
+
+Git/agentes desde raíz, comandos de aplicación desde proyecto/. Se puede copiar .env.example a .env únicamente en un clon nuevo; los scripts dev e infra:check cargan .env por defecto y el proceso tiene precedencia. Para probar el ejemplo versionado directamente, usar --env-file:
+
+```powershell
+Set-Location proyecto
+corepack.cmd pnpm env:check --env-file .env.example
+$env:POSTGRES_PORT='55432'
+$env:DATABASE_URL='postgresql://cafeteria_local:solo_pruebas_locales@127.0.0.1:55432/cafeteria_local'
+docker compose --env-file .env.example -f infra/compose.yaml up -d --wait --wait-timeout 150
+corepack.cmd pnpm infra:check --env-file .env.example
+corepack.cmd pnpm dev --env-file .env.example
+```
+
+55432 solo se usó porque el listener 5432 está ocupado en este Windows. No terminar procesos ajenos. Sin conflicto, omitir los dos overrides y usar 5432. No basta cambiar POSTGRES_PORT: DATABASE_URL debe concordar. API_BASE_URL/API_PORT y WEB_ORIGIN/WEB_PORT también deben coincidir; para otros puertos libres, ajustar ambos valores de cada par en el proceso o archivo local antes de dev. El coordinador rechaza puertos ocupados antes de iniciar hijos.
+
+Se esperan OK postgres/redis/rabbitmq/mailpit, worker_ready y DEV_READY web/API/worker. API y web usan 3001/3000 si están libres. El supervisor pasa variables por env y configura tsx por paquete; Next no hereda un flag Node --env-file incompatible con sus workers. Turbo registra dev como persistente/no cacheable; el supervisor Node coordina procesos y cierre entre Windows/Linux. No arranca Docker automáticamente ni acepta APP_ENV cloud o URLs de datos/correo fuera de loopback.
+
+En otra terminal comprobar / de web, /health y /health/live de API, /api/health de web y Mailpit /readyz. Infra-check verifica SELECT parametrizado, Redis escritura/lectura/eliminación, RabbitMQ confirm/correlación/ack/cola exclusiva vacía y Mailpit HTTP 200 + SMTP 220/QUIT/221. Ante fallo imprime ERROR con el nombre y termina con código 1, sin valores de configuración.
+
+Detener dev con Ctrl+C: el supervisor cierra únicamente sus hijos; el worker elimina heartbeat y los puertos se liberan. En este Windows el wrapper .cmd de pnpm pregunta Terminate batch job (Y/N); responder Y. La terminal puede devolver código 1 por interrupción del batch, distinto del caso de error de infraestructura. Luego, desde proyecto/ con el mismo override de POSTGRES_PORT, ejecutar docker compose --env-file .env.example -f infra/compose.yaml down. No añadir -v: se conservan los volúmenes.
+
+Ensayo y resultados precisos en [evidence/t015-bootstrap.md](evidence/t015-bootstrap.md). Es verificación del autor, no la revisión independiente desde clon limpio de T022. E2E, flags y diseño final mantienen sus tareas pendientes.

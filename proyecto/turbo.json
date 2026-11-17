@@ -4,6 +4,10 @@
     "typecheck": {
       "dependsOn": ["^typecheck"],
       "outputs": []
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
     }
   },
   "globalDependencies": ["packages/config/**", "tsconfig.json"]
