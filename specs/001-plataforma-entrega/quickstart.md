@@ -1,6 +1,6 @@
 # Verificación desde clon limpio — Spec #1
 
-**Estado:** preparación T001–T006/T008 disponible bajo proyecto/. Solo instalación, configuración, tipos, lint, formato y test:config están implementados. El arranque completo, Compose, build de aplicaciones, E2E y cloud del flujo siguiente siguen siendo guía futura sin validar. No desplegar desde equipos personales.
+**Estado:** preparación T001–T008 disponible bajo `proyecto/`; T007 verificada el 2026-11-17 en `feature/spec-1-continuacion`. Instalación, configuración, tipos, lint, formato, test:config y Compose local están implementados. API/web/worker, build, E2E y cloud del flujo completo siguiente siguen siendo guía futura sin validar. Véase [evidencia T007](evidence/t007-local-compose.md). No desplegar desde equipos personales.
 
 ## Prerrequisitos y configuración
 
@@ -9,7 +9,7 @@ Git, Docker con contenedores Linux/Compose y motor iniciado, Node y pnpm en las 
 Ejecutar en una carpeta nueva, manteniendo la rama asignada:
 
 ```powershell
-git clone --branch feature/spec-1 --single-branch https://github.com/Nicolay404/cafeteriaArquitecturaSW.git cafeteria-verificacion
+git clone --branch feature/spec-1-continuacion --single-branch https://github.com/Nicolay404/cafeteriaArquitecturaSW.git cafeteria-verificacion
 Set-Location cafeteria-verificacion
 git branch --show-current
 Test-Path specs/001-plataforma-entrega/spec.md
@@ -132,4 +132,24 @@ node --env-file=.env.example --import tsx scripts/env-check.ts
 
 En Linux usar corepack en vez de corepack.cmd. Node/pnpm fijados por archivos del workspace. Si pnpm no está en PATH, Turbo requiere shims Corepack temporales descritos en README.md; no cambiar políticas/globales. pnpm puede requerir red para metadatos de seguridad aunque paquetes están en cache. No desactivar políticas para forzar offline. Resultados actuales de migración en evidence/workspace-reorganization.md, no inferidos de estos comandos.
 
-El bloque original de arranque es futuro: ejecutar desde proyecto/, donde irá infra/compose.yaml (T007 pendiente). Los scripts de aplicación van en proyecto/scripts/; los futuros scripts Git de historial/revert permanecen en scripts/ci/ desde raíz. .github/workflows/ se mantiene en raíz y deberá invocar trabajo de aplicación con cwd proyecto; rutas de checkout/cache empiezan proyecto/. Docker futuro contexto proyecto y despliegue apuntando proyecto/render.yaml, proyecto/vercel.json y proyecto/apps/web. Sin crear CI/Docker/cloud en esta reorganización.
+El bloque original de arranque es futuro: ejecutar desde proyecto/, donde está infra/compose.yaml (T007 verificada; consultar evidencia). Los scripts de aplicación van en proyecto/scripts/; los futuros scripts Git de historial/revert permanecen en scripts/ci/ desde raíz. .github/workflows/ se mantiene en raíz y deberá invocar trabajo de aplicación con cwd proyecto; rutas de checkout/cache empiezan proyecto/. Docker futuro contexto proyecto y despliegue apuntando proyecto/render.yaml, proyecto/vercel.json y proyecto/apps/web. Sin crear CI/Docker/cloud en esta reorganización.
+
+## Compose disponible — T007
+
+Desde `proyecto/`, sin crear ni modificar un `.env` privado:
+
+```powershell
+docker --version
+docker compose version
+docker info
+docker compose --env-file .env.example -f infra/compose.yaml config --quiet
+docker compose --env-file .env.example -f infra/compose.yaml up -d --wait --wait-timeout 150
+docker compose --env-file .env.example -f infra/compose.yaml ps
+docker compose --env-file .env.example -f infra/compose.yaml down
+```
+
+Se esperan Postgres, Redis, RabbitMQ y Mailpit sanos. `down` conserva los cuatro volúmenes; no usar `down -v` para una parada normal. Solo infraestructura: no demuestra API, web, integración Testcontainers o H0 completo. Las imágenes fijadas se descargan de repositorios públicos; no requiere secretos cloud.
+
+Si el CLI no se encuentra, falta Docker en PATH/instalación; si solo falla `docker compose version`, falta el plugin Compose. Si ambas versiones funcionan pero `docker info` no conecta al pipe `dockerDesktopLinuxEngine`, abrir Docker Desktop en Windows e iniciar el motor Linux; resolver los requisitos de WSL/virtualización indicados por Desktop si los hubiera. No reinstalar ni cambiar permisos automáticamente.
+
+En esta prueba el 5432 ya tenía un listener. Antes de `up`, se usó `$env:POSTGRES_PORT='55432'`; el contenedor sigue usando 5432 internamente. Al ejecutar aplicaciones futuras, ajustar también `DATABASE_URL` en su entorno a `postgresql://cafeteria_local:solo_pruebas_locales@127.0.0.1:55432/cafeteria_local`. La variable de puerto solo afecta Compose, no reescribe la URL de la API. No detener procesos ajenos. En una nueva terminal sin override se mantiene el puerto 5432 del plan.
