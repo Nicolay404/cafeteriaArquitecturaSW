@@ -1,6 +1,6 @@
 # Verificación desde clon limpio — Spec #1
 
-**Estado:** preparación T001–T008 disponible bajo `proyecto/`; T007 verificada el 2026-11-17 en `feature/spec-1-continuacion`. Instalación, configuración, tipos, lint, formato, test:config y Compose local están implementados. API/web/worker, build, E2E y cloud del flujo completo siguiente siguen siendo guía futura sin validar. Véase [evidencia T007](evidence/t007-local-compose.md). No desplegar desde equipos personales.
+**Estado:** T001–T014 verificadas bajo `proyecto/`: configuración, Compose local, API de salud, worker técnico, inicio básico y proxy web runtime. Build web y suites locales probados; ver evidence/t011-health.md, evidence/t012-worker-pending.md y evidence/t013-t014-web.md. El arranque coordinado T015, E2E y cloud del flujo completo siguiente siguen pendientes. No desplegar desde equipos personales ni interpretar la base funcional como diseño final aprobado.
 
 ## Prerrequisitos y configuración
 

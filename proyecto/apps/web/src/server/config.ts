@@ -1,9 +1,11 @@
-import { base, loadEnvironment, port, url } from '../../../../packages/config/src/env.js';
-import type { ConfigInput } from '../../../../packages/config/src/env.js';
+import { base, loadEnvironment, port, url } from '../../../../packages/config/src/env.ts';
+import type { ConfigInput } from '../../../../packages/config/src/env.ts';
 
 // Server-side only. Do not export upstream configuration through client components.
 export function readWebConfig(input: ConfigInput = {}) {
-  const environment = loadEnvironment(input);
+  // Next receives environment from the launcher/platform. Never auto-read or
+  // trace a private dotenv file into its build; explicit test files still work.
+  const environment = loadEnvironment({ ...input, envFile: input.envFile ?? null });
   return Object.freeze({
     ...base(environment),
     port: port(environment, 'WEB_PORT'),

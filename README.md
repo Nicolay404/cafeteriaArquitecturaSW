@@ -1,4 +1,4 @@
-﻿# Proyecto Cafetería
+# Proyecto Cafetería
 
 La raíz de este repositorio sigue siendo la raíz de **Git y de los agentes**. Abrir aquí Codex, Claude Code o Antigravity y leer `AGENTS.md`, la constitución en `.specify/memory/constitution.md` y el spec correspondiente. No ejecutar `git init` dentro de `proyecto/` ni crear otra rama automáticamente.
 
@@ -16,9 +16,9 @@ cafeteriaArquitecturaSW/              raíz Git y agentes
 │   ├── contracts/  checklists/  decisions/  evidence/
 └── proyecto/                        raíz pnpm/Turbo
     ├── apps/
-    │   ├── api/                     configuración y nueve módulos vacíos
-    │   ├── web/                     configuración; sin página todavía
-    │   └── worker/                  configuración; sin consumidor todavía
+    │   ├── api/                     salud Nest y nueve módulos de negocio vacíos
+    │   ├── web/                     inicio básico y proxy de salud, sin diseño final
+    │   └── worker/                  sondeo técnico AMQP y heartbeat Redis privado
     ├── packages/{config,contracts,ui}/
     ├── scripts/env-check.ts
     ├── tests/unit/config.spec.ts
@@ -45,7 +45,7 @@ corepack.cmd pnpm test:config
 node --env-file=.env.example --import tsx scripts/env-check.ts
 ```
 
-La rama de este incremento es `feature/spec-1`. `--frozen-lockfile` comprueba el lockfile existente; no regenerarlo para ocultar problemas de traslado. No se afirma instalación totalmente offline: pnpm puede necesitar metadatos de sus políticas de dependencias. La instalación indicada no ejecuta scripts lifecycle de dependencias. En Linux usar `corepack` en lugar de `corepack.cmd`.
+La rama activa autorizada del Spec #1 es `feature/spec-1-continuacion` (PR #2). `--frozen-lockfile` comprueba el lockfile existente; no regenerarlo para ocultar problemas de traslado. No se afirma instalación totalmente offline: pnpm puede necesitar metadatos de sus políticas de dependencias. La instalación indicada no ejecuta scripts lifecycle de dependencias. En Linux usar `corepack` en lugar de `corepack.cmd`.
 
 Si pnpm no está en PATH, Turbo necesita un shim aunque el comando inicial use Corepack. Se puede habilitar **solo para esa terminal**, sin modificar instalación global ni política de PowerShell:
 
@@ -57,13 +57,13 @@ $env:PATH = $taskShims + [System.IO.Path]::PathSeparator + $env:PATH
 corepack.cmd pnpm typecheck
 ```
 
-El validador lee `proyecto/.env` si existe y da prioridad al entorno del proceso. El comando con `--env-file=.env.example` prueba valores locales sin crear un archivo privado. Copiar el ejemplo a `.env` dentro del workspace será una elección local; no reutilizar/mover automáticamente secretos que existieran en la raíz.
+API/worker y el validador leen `proyecto/.env` si existe y dan prioridad al entorno del proceso. La web recibe variables del launcher/plataforma en runtime; no carga automáticamente archivos privados dentro del build. El comando con `--env-file=.env.example` prueba valores locales sin crear un archivo privado. Copiar el ejemplo a `.env` dentro del workspace será una elección local; no reutilizar/mover automáticamente secretos que existieran en la raíz.
 
-La preparación T001–T006/T008 está implementada; T007 continúa pendiente por falta de Docker/Compose. No existen aún `/health`, página inicial funcional, worker, scripts `dev`/`build`/integración/E2E ni despliegues. La guía completa futura y sus accesos están en [quickstart.md](specs/001-plataforma-entrega/quickstart.md). Esta reorganización no avanza esas tareas.
+T001–T014 están verificadas: Compose local, salud API, worker técnico, inicio básico y proxy runtime. Se ejecutan `corepack.cmd pnpm test:integration` (Docker real) y `corepack.cmd pnpm exec vitest run --config apps/web/vitest.config.ts`. Build web probado con `node apps/web/node_modules/next/dist/bin/next build apps/web` y NODE_ENV=production; sin `--env-file`, porque Next propaga flags incompatibles a sus workers. No existen todavía los scripts coordinados `dev`/`build`, E2E o despliegues; corresponden a las siguientes tareas. Esto no certifica H0 completo ni aprobación visual. Resultados y guía en [quickstart.md](specs/001-plataforma-entrega/quickstart.md).
 
 ## Rutas para automatización futura
 
-Todavía **no existen workflows, Compose ni configuración de proveedores**; no se crean aquí:
+Compose local existe en `proyecto/infra/compose.yaml`. Todavía **no existen workflows ni configuración de proveedores**; deberán respetar estas rutas:
 
 | Área | Ubicación que deberá usar |
 |---|---|

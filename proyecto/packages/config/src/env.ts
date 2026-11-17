@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { dirname, resolve } from 'node:path';
 import { parseEnv } from 'node:util';
 
 export type Environment = Readonly<Record<string, string | undefined>>;
@@ -18,7 +19,7 @@ export class ConfigurationError extends Error {
 export function loadEnvironment(input: ConfigInput = {}): Environment {
   const filename =
     input.envFile === undefined
-      ? fileURLToPath(new URL('../../../.env', import.meta.url))
+      ? resolve(dirname(fileURLToPath(import.meta.url)), '../../..', '.env')
       : input.envFile;
   let fileValues: Environment = {};
   if (filename !== null) {

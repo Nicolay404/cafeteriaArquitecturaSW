@@ -13,6 +13,7 @@ export default [
       '**/.next/**',
       '**/.turbo/**',
       '**/*.min.js',
+      '**/next-env.d.ts',
     ],
   },
   ...tseslint.configs.recommended,
