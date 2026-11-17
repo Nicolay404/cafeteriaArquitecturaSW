@@ -21,3 +21,4 @@ minimumReleaseAgeExclude:
   - '@typescript-eslint/utils@8.73.0'
   - '@typescript-eslint/visitor-keys@8.73.0'
   - typescript-eslint@8.73.0
+  - amqplib@2.4.0
