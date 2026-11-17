@@ -1,0 +1,15 @@
+node_modules/
+.pnpm-store/
+.git/
+.next/
+.turbo/
+dist/
+build/
+coverage/
+*.log*
+.env
+.env.*
+Dockerfile*
+.dockerignore
+secrets/
+*.key

@@ -1,0 +1,29 @@
+{
+  "name": "cafeteria",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.21.0",
+  "engines": {
+    "node": "\u003e=24.22.1 \u003c25"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.1",
+    "eslint": "10.15.0",
+    "eslint-plugin-boundaries": "7.4.4",
+    "prettier": "3.10.1",
+    "tsx": "4.23.15",
+    "turbo": "2.11.11",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.73.0",
+    "vitest": "5.1.0",
+    "eslint-import-resolver-typescript": "4.4.5"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json \u0026\u0026 turbo run typecheck",
+    "lint": "eslint apps packages scripts tests",
+    "format:check": "prettier --check apps packages scripts tests package.json pnpm-workspace.yaml turbo.json tsconfig.json eslint.config.mjs .prettierrc.json",
+    "env:check": "tsx scripts/env-check.ts",
+    "test:config": "vitest run tests/unit/config.spec.ts"
+  }
+}

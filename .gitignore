@@ -16,3 +16,19 @@ coverage/
 .env.*
 !.env.example
 .vercel/
+
+# Bootstrap local (T005); conservar entradas previas
+build/
+.pnpm-store/
+.cache/
+*.log
+*.tsbuildinfo
+playwright-report/
+test-results/
+Thumbs.db
+*.tmp
+*.swp
+.vscode/
+.idea/
+secrets/
+*.key
