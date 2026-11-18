@@ -37,7 +37,7 @@ export function Field({
   onChange,
   maxLength,
   action,
-}: FieldProps & { action?: ReactNode }) {
+}: Readonly<FieldProps & { action?: ReactNode }>) {
   const hintId = hint ? `${id}-ayuda` : undefined;
   const errorId = error ? `${id}-error` : undefined;
   const describedBy = [hintId, errorId].filter(Boolean).join(' ') || undefined;
@@ -87,14 +87,14 @@ export function Checkbox({
   error,
   checked,
   onChange,
-}: {
+}: Readonly<{
   id: string;
   name: string;
   label: ReactNode;
   error?: string | undefined;
   checked?: boolean;
   onChange?: ChangeEventHandler<HTMLInputElement>;
-}) {
+}>) {
   const errorId = error ? `${id}-error` : undefined;
   return (
     <div className="campo">
@@ -122,7 +122,7 @@ export function Checkbox({
 }
 
 /** Contraseña con botón para mostrarla u ocultarla: se puede revisar lo escrito antes de enviarlo. */
-export function PasswordField(props: Omit<FieldProps, 'type'>) {
+export function PasswordField(props: Readonly<Omit<FieldProps, 'type'>>) {
   const [visible, setVisible] = useState(false);
   return (
     <Field
@@ -150,12 +150,23 @@ export interface FormError {
   message: string;
 }
 
-/** Resumen al inicio del formulario: recibe el foco al aparecer y enlaza a cada campo. */
-export function ErrorSummary({ errors }: { errors: readonly FormError[] }) {
+/**
+ * Resumen al inicio del formulario. Toma el foco cuando APARECE o cuando se vuelve a intentar enviar
+ * (cambia `attempt`), nunca en cada render: si lo hiciera, cada tecla escrita para corregir un
+ * error devolvería el foco al resumen.
+ */
+export function ErrorSummary({
+  errors,
+  attempt = 0,
+}: Readonly<{
+  errors: readonly FormError[];
+  attempt?: number;
+}>) {
   const ref = useRef<HTMLDivElement>(null);
+  const hasErrors = errors.length > 0;
   useEffect(() => {
-    if (errors.length > 0) ref.current?.focus();
-  }, [errors]);
+    if (hasErrors) ref.current?.focus();
+  }, [attempt, hasErrors]);
   if (errors.length === 0) return null;
   return (
     <div
@@ -187,7 +198,7 @@ export function Button({
   busy = false,
   block = false,
   onClick,
-}: {
+}: Readonly<{
   children: ReactNode;
   variant?: 'primary' | 'secondary';
   type?: 'button' | 'submit';
@@ -195,7 +206,7 @@ export function Button({
   busy?: boolean;
   block?: boolean;
   onClick?: () => void;
-}) {
+}>) {
   const className = [
     'boton',
     variant === 'secondary' ? 'boton-secundario' : '',
@@ -217,15 +228,23 @@ export function Button({
 }
 
 /** Confirmación o fallo general. Nunca desaparece sola: sin límites de tiempo (WCAG 2.2.3). */
-export function StatusMessage({ kind, children }: { kind: 'ok' | 'error'; children: ReactNode }) {
+export function StatusMessage({
+  kind,
+  children,
+}: Readonly<{ kind: 'ok' | 'error'; children: ReactNode }>) {
+  if (kind === 'error')
+    return (
+      <div className="estado estado-error" role="alert">
+        <span aria-hidden="true">⚠ </span>
+        {children}
+      </div>
+    );
+  // <output> tiene el rol «status» de forma nativa (anuncia el cambio sin interrumpir).
   return (
-    <div
-      className={kind === 'error' ? 'estado estado-error' : 'estado'}
-      role={kind === 'error' ? 'alert' : 'status'}
-    >
-      <span aria-hidden="true">{kind === 'error' ? '⚠ ' : '✓ '}</span>
+    <output className="estado">
+      <span aria-hidden="true">✓ </span>
       {children}
-    </div>
+    </output>
   );
 }
 
@@ -234,11 +253,11 @@ export function AccountShell({
   title,
   intro,
   children,
-}: {
+}: Readonly<{
   title: string;
   intro?: string;
   children: ReactNode;
-}) {
+}>) {
   return (
     <div className="cuenta">
       <div className="cuenta-marco">

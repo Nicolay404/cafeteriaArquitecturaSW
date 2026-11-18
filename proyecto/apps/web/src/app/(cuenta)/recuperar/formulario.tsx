@@ -11,10 +11,12 @@ export function FormularioRecuperar() {
   const [error, setError] = useState<string | undefined>();
   const [general, setGeneral] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const [sent, setSent] = useState(false);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
+    setAttempt((current) => current + 1);
     setGeneral(null);
     const checked = validar(correoRequest, { correo });
     if (!checked.ok) return setError(checked.campos['correo']);
@@ -46,7 +48,10 @@ export function FormularioRecuperar() {
     >
       {general ? <StatusMessage kind="error">{general}</StatusMessage> : null}
       <form onSubmit={(event) => void submit(event)} noValidate>
-        <ErrorSummary errors={error ? [{ fieldId: 'correo', message: error }] : []} />
+        <ErrorSummary
+          attempt={attempt}
+          errors={error ? [{ fieldId: 'correo', message: error }] : []}
+        />
         <Field
           id="correo"
           name="correo"

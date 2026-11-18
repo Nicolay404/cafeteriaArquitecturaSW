@@ -33,7 +33,7 @@ export function Panel() {
   if (state === 'loading')
     return (
       <AccountShell title="Mi cuenta">
-        <p role="status">Cargando tu cuenta…</p>
+        <output>Cargando tu cuenta…</output>
       </AccountShell>
     );
 

@@ -133,8 +133,8 @@ describe('Button, StatusMessage y AccountShell', () => {
     expect(out).toContain('type="button"');
   });
 
-  it('la confirmación es role=status y el fallo role=alert', () => {
-    expect(html(<StatusMessage kind="ok">Guardado</StatusMessage>)).toContain('role="status"');
+  it('la confirmación es un <output> (rol status nativo) y el fallo role=alert', () => {
+    expect(html(<StatusMessage kind="ok">Guardado</StatusMessage>)).toContain('<output');
     expect(html(<StatusMessage kind="error">Falló</StatusMessage>)).toContain('role="alert"');
   });
 

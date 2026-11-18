@@ -214,6 +214,7 @@ body:has(.cuenta) {
 }
 
 .estado {
+  display: block;
   margin: 0 0 1.5rem;
   padding: 1rem 1.25rem;
   border: 2px solid var(--exito);
