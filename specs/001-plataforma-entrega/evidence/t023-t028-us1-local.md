@@ -74,3 +74,16 @@ Todas están en herramientas de desarrollo y ninguna en lo que se despliega. Aun
 ## Límites
 
 Estos resultados son del autor, en Windows. No hay protección de `main`, ni Sonar real, ni ejecución de los workflows (T029–T034). El comportamiento de `verify-commits` en el runner Linux no se ha probado; en Windows se ejecuta con `shell` para los shims `.cmd` de pnpm y Node avisa de una deprecación inocua (DEP0190) que no ocurre en Linux.
+
+## Primera ejecución real en GitHub (PR #4, 2026-11-18)
+
+Los workflows de T028 corrieron por primera vez. **Pasaron:** commits uno a uno (1 min 52 s), lint, tipos, pruebas con Docker y build (3 min 39 s), Trivy y CodeQL. **Fallaron, por motivos distintos:**
+
+| Control | Causa | Estado |
+|---|---|---|
+| Gitleaks | Falso positivo: marcó `sonar.projectKey=...` como clave genérica. Mi escaneo local anterior corrió antes de crear ese archivo y no lo vio | Corregido con una excepción acotada en `.gitleaks.toml` (misma línea y mismo archivo); comprobado en local (35 commits sin fugas) y con un control negativo: la misma línea en otro archivo, un token de GitHub y una clave AWS aleatorios sí se detectan |
+| OSV | Los mismos 6 hallazgos de H-06 (2 altos en picomatch, sin parche) | **Abierto, decisión del equipo** |
+| Sonar | Falta `SONAR_TOKEN`: falla cerrado, como se diseñó | Pendiente de crear el proyecto de Sonar y el secreto (T030) |
+| Agregados | Fallan porque dependen de los anteriores | Esperado |
+
+El aviso de que el comentario en el PR no se pudo escribir era un permiso de solo lectura del token; se desactivan los comentarios de Gitleaks. Esto cumple por primera vez, con datos reales, el comportamiento "fail-closed" que T028 solo había validado con actionlint.
