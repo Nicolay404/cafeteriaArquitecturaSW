@@ -10,6 +10,7 @@ import {
   RELEASE_DIR,
   createLocalAdapters,
   findManifest,
+  localEnvironments,
   stackVariables,
 } from '../../scripts/deploy/local-adapters.js';
 import type { Runner } from '../../scripts/deploy/local-adapters.js';
@@ -45,6 +46,19 @@ describe('entornos locales', () => {
     expect(LOCAL_ENVIRONMENTS.production.project).toBe('cafeteria-production');
   });
 
+  it('la base de puertos es configurable y mantiene a los entornos separados', () => {
+    const custom = localEnvironments(7000);
+    expect(custom.staging).toMatchObject({ web: 7000, api: 7001, postgres: 57000 });
+    expect(custom.production.web).toBe(7100);
+    const ports = Object.values(custom).flatMap((item) => [item.web, item.api, item.postgres]);
+    expect(new Set(ports).size).toBe(ports.length);
+    expect(
+      stackVariables('staging', current, { api: 'a', worker: 'w', web: 'x' }, 7000),
+    ).toMatchObject({
+      WEB_HOST_PORT: '7000',
+    });
+  });
+
   it('las variables del stack llevan la versión del candidato, sus imágenes y los puertos del entorno', () => {
     const variables = stackVariables('staging', current, { api: 'a', worker: 'w', web: 'x' });
     expect(variables).toMatchObject({
@@ -53,9 +67,9 @@ describe('entornos locales', () => {
       API_IMAGE: 'a',
       WORKER_IMAGE: 'w',
       WEB_IMAGE: 'x',
-      WEB_HOST_PORT: '4100',
-      API_HOST_PORT: '4101',
-      POSTGRES_HOST_PORT: '54100',
+      WEB_HOST_PORT: '5100',
+      API_HOST_PORT: '5101',
+      POSTGRES_HOST_PORT: '55100',
     });
   });
 });

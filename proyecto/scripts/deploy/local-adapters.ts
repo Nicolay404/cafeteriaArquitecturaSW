@@ -22,11 +22,29 @@ export interface LocalEnvironment {
   postgres: number;
 }
 
-export const LOCAL_ENVIRONMENTS: Record<EnvironmentType, LocalEnvironment> = {
-  preview: { project: 'cafeteria-preview', web: 4300, api: 4301, postgres: 54300 },
-  staging: { project: 'cafeteria-staging', web: 4100, api: 4101, postgres: 54100 },
-  production: { project: 'cafeteria-production', web: 4200, api: 4201, postgres: 54200 },
-};
+/**
+ * Puertos de cada entorno a partir de una base. Algunos sistemas reservan rangos enteros (Windows
+ * reserva 3478–4377 en muchos equipos): por eso la base es configurable con RELEASE_PORT_BASE.
+ */
+export function localEnvironments(base = 5100): Record<EnvironmentType, LocalEnvironment> {
+  return {
+    staging: { project: 'cafeteria-staging', web: base, api: base + 1, postgres: base + 50_000 },
+    production: {
+      project: 'cafeteria-production',
+      web: base + 100,
+      api: base + 101,
+      postgres: base + 50_100,
+    },
+    preview: {
+      project: 'cafeteria-preview',
+      web: base + 200,
+      api: base + 201,
+      postgres: base + 50_200,
+    },
+  };
+}
+
+export const LOCAL_ENVIRONMENTS = localEnvironments();
 
 export type Phase = 'migrate' | 'backend' | 'web' | 'smoke' | 'restore';
 export const PHASES: readonly Phase[] = ['migrate', 'backend', 'web', 'smoke', 'restore'];
@@ -59,6 +77,8 @@ export interface LocalOptions {
   fetcher?: typeof fetch;
   /** Solo para ensayos: hace fallar a propósito una fase para probar el rollback. */
   inject?: Phase;
+  /** Base de los puertos del entorno (por defecto 5100). */
+  portBase?: number;
   /** Pausa entre intentos del smoke; se acorta en las pruebas. */
   retryDelayMs?: number;
   migrationsDir?: string;
@@ -101,8 +121,9 @@ export function stackVariables(
   environment: EnvironmentType,
   candidate: Candidate,
   images: { api: string; worker: string; web: string },
+  portBase?: number,
 ): Record<string, string> {
-  const settings = LOCAL_ENVIRONMENTS[environment];
+  const settings = localEnvironments(portBase)[environment];
   return {
     APP_ENV: environment,
     APP_VERSION: candidate.sha,
@@ -118,7 +139,7 @@ export function stackVariables(
 export function createLocalAdapters(options: LocalOptions): Adapters {
   const run = options.run ?? spawnRunner;
   const fetcher = options.fetcher ?? fetch;
-  const settings = LOCAL_ENVIRONMENTS[options.environment];
+  const settings = localEnvironments(options.portBase)[options.environment];
   const stateDir = join(options.root, RELEASE_DIR);
   const manifests = join(options.root, MANIFESTS_DIR);
   const stackFile = join(options.root, 'infra/stack.compose.yaml');
@@ -167,7 +188,7 @@ export function createLocalAdapters(options: LocalOptions): Adapters {
         '120',
         ...services,
       ],
-      stackVariables(options.environment, candidate, refs),
+      stackVariables(options.environment, candidate, refs, options.portBase),
     );
     if (result.code !== 0)
       throw new Error(`${what} falló: ${result.output.trim().split('\n').slice(-3).join(' | ')}`);

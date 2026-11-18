@@ -5,7 +5,7 @@ import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 import { buildCandidate, candidateId } from '../../packages/contracts/src/candidate.js';
 import { MANIFESTS_DIR, RELEASE_DIR } from '../../scripts/deploy/local-adapters.js';
 import type { Phase } from '../../scripts/deploy/local-adapters.js';
-import { runReleaseCli } from '../../scripts/deploy/release-local.js';
+import { portBase, runReleaseCli } from '../../scripts/deploy/release-local.js';
 import type { Adapters } from '../../scripts/deploy/release.js';
 
 // T061/T062 — el CLI de liberación local: valida sus argumentos, registra los despliegues y las
@@ -186,5 +186,16 @@ describe('CLI de liberación local', () => {
   it('un candidato sin manifiesto no se libera', async () => {
     expect(await run('release', '--candidate', 'cand-ffffffffffff', '--env', 'staging')).toBe(1);
     expect(lines.join('\n')).toMatch(/manifiesto/i);
+  });
+});
+
+describe('RELEASE_PORT_BASE', () => {
+  it('usa 5100 por defecto y acepta una base válida', () => {
+    expect(portBase(undefined)).toBe(5100);
+    expect(portBase('7000')).toBe(7000);
+  });
+
+  it.each(['abc', '80', '99999', '-5', '12.5', ''])('rechaza «%s»', (value) => {
+    expect(() => portBase(value)).toThrow(/RELEASE_PORT_BASE/);
   });
 });

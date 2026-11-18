@@ -169,13 +169,27 @@ export async function runReleaseCli(args: string[], deps: CliDeps): Promise<numb
   }
 }
 
+/** RELEASE_PORT_BASE: base de los puertos locales; debe ser un puerto válido sin pasarse de rango. */
+export function portBase(value = process.env['RELEASE_PORT_BASE']): number {
+  if (value === undefined) return 5100;
+  const parsed = Number(value);
+  if (!/^[0-9]+$/.test(value) || parsed < 1024 || parsed > 14_000)
+    throw new Error('RELEASE_PORT_BASE debe ser un entero entre 1024 y 14000');
+  return parsed;
+}
+
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   const root = process.cwd();
   void runReleaseCli(process.argv.slice(2), {
     root,
     now: () => new Date().toISOString(),
     adaptersFor: (environment, inject) =>
-      createLocalAdapters({ environment, root, ...(inject ? { inject } : {}) }),
+      createLocalAdapters({
+        environment,
+        root,
+        portBase: portBase(),
+        ...(inject ? { inject } : {}),
+      }),
     log: (line) => console.log(line),
   }).then((code) => {
     process.exitCode = code;
