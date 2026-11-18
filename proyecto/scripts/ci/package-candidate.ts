@@ -102,6 +102,7 @@ async function assemble(directory: string, options: PackageOptions): Promise<Pac
   for (const app of APPS) {
     const built = await options.docker([
       'build',
+      '--quiet',
       '-f',
       `apps/${app}/Dockerfile`,
       '-t',
