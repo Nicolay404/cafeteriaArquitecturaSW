@@ -333,11 +333,11 @@ describe('T017 — US1 por HTTP con servicios reales', () => {
     await register(correo);
     const before = (await mails(correo)).length;
     expect((await api('/api/auth/reenviar-confirmacion', { body: { correo } })).status).toBe(202);
-    expect((await mails(correo)).length).toBe(before + 1);
+    expect(await mails(correo)).toHaveLength(before + 1);
     const active = await activeAccount();
     const count = (await mails(active)).length;
     await api('/api/auth/reenviar-confirmacion', { body: { correo: active } });
-    expect((await mails(active)).length).toBe(count);
+    expect(await mails(active)).toHaveLength(count);
   });
 
   test('los errores del formulario dicen qué campo falla y cómo corregirlo', async () => {
