@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from 'node:crypto';
-import type { Db } from './db.js';
+import type { Db } from '../../../../../packages/contracts/src/db.js';
 
 // Research D-06: enlaces de un solo uso (confirmar correo, recuperar contraseña, invitación y
 // cambio de correo). El token son 256 bits aleatorios en base64url; en la base solo se guarda su
