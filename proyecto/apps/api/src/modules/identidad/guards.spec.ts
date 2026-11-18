@@ -16,7 +16,7 @@ const NOW = 1_800_000_000_000;
 const session = (overrides: Partial<Session> = {}): Session => ({
   cuentaId: 'c1',
   rol: 'cliente',
-  mfaVerificado: false,
+  mfaVerificado: true,
   autenticadoEn: NOW,
   creadaEn: NOW,
   csrf: 'csrf-token',
@@ -49,7 +49,7 @@ describe('evaluateAccess', () => {
   it.each(['personal', 'admin'] as const)(
     '%s sin segundo factor verificado: 403 mfa_requerido',
     (rol) => {
-      expect(evaluateAccess(session({ rol }), {}, NOW)).toMatchObject({
+      expect(evaluateAccess(session({ rol, mfaVerificado: false }), {}, NOW)).toMatchObject({
         ok: false,
         status: 403,
         codigo: 'mfa_requerido',
@@ -58,19 +58,25 @@ describe('evaluateAccess', () => {
   );
 
   it('las rutas del flujo de MFA admiten la sesión parcial; las demás no', () => {
-    const partial = session({ rol: 'admin' });
+    const partial = session({ rol: 'admin', mfaVerificado: false });
     expect(evaluateAccess(partial, { allowPartialMfa: true }, NOW)).toEqual({ ok: true });
     expect(evaluateAccess(partial, { roles: ['admin'] }, NOW)).toMatchObject({ ok: false });
   });
 
   it('el rol se comprueba antes que el MFA: no se revela nada a quien no debe ver la función', () => {
-    expect(evaluateAccess(session({ rol: 'personal' }), { roles: ['admin'] }, NOW)).toMatchObject({
+    expect(
+      evaluateAccess(session({ rol: 'personal', mfaVerificado: false }), { roles: ['admin'] }, NOW),
+    ).toMatchObject({
       codigo: 'rol_no_permitido',
     });
   });
 
-  it('un cliente no necesita MFA', () => {
+  it('un cliente sin MFA activado entra; con MFA pendiente no (T027)', () => {
     expect(evaluateAccess(session(), {}, NOW)).toEqual({ ok: true });
+    expect(evaluateAccess(session({ mfaVerificado: false }), {}, NOW)).toMatchObject({
+      ok: false,
+      codigo: 'mfa_requerido',
+    });
   });
 
   it('las acciones sensibles piden haber confirmado la contraseña hace poco', () => {
