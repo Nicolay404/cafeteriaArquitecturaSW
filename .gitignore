@@ -37,3 +37,4 @@ secrets/
 next-env.d.ts
 quality-reports/
 proyecto/candidates/
+proyecto/.release/

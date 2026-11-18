@@ -12,6 +12,7 @@ const candidate = buildCandidate({
   sha: 'a'.repeat(40),
   digestApi: `sha256:${'1'.repeat(64)}`,
   digestWorker: `sha256:${'2'.repeat(64)}`,
+  digestWeb: `sha256:${'4'.repeat(64)}`,
   hashWeb: `sha256:${'3'.repeat(64)}`,
   migrationChecksums: { '001': 'b'.repeat(64) },
   configRevision: 'rev-1',
