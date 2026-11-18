@@ -18,7 +18,7 @@ Rutas relativas a `proyecto/`; `promociones/` = `apps/api/src/modules/promocione
 
 ## Phase 1: Setup
 
-- [ ] T001 Crear `promociones/dominio/` con `dinero.ts` y su test `dinero.spec.ts`: centavos enteros seguros, puntos básicos 1–10000, `descuentoPorcentual(precio, pb)` con redondeo mitad hacia arriba (R3), rechazo de no enteros y negativos (LOCAL).
+- [x] T001 Crear `promociones/dominio/` con `dinero.ts` y su test `dinero.spec.ts`: centavos enteros seguros, puntos básicos 1–10000, `descuentoPorcentual(precio, pb)` con redondeo mitad hacia arriba (R3), rechazo de no enteros y negativos (LOCAL).
 
 ---
 
