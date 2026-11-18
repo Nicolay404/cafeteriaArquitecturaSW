@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { setTimeout as delay } from 'node:timers/promises';
 import { Client } from 'pg';
@@ -161,32 +162,50 @@ export function authorizeMigration(environment: Environment) {
     throw new Error('Migraciones no autorizadas: la base no es local');
 }
 
-async function main() {
-  const { values } = parseArgs({
-    args: process.argv.slice(2).filter((argument) => argument !== '--'),
-    options: {
-      'env-file': { type: 'string', default: '.env' },
-      dir: { type: 'string', default: 'infra/migrations' },
-    },
-  });
-  const environment = loadEnvironment({ envFile: values['env-file']! });
-  authorizeMigration(environment);
-  const result = await migrate({
-    databaseUrl: required(environment, 'DATABASE_URL'),
-    directory: resolve(values.dir!),
-  });
-  console.log(
-    `Migraciones aplicadas: ${result.applied.join(', ') || 'ninguna'}; ya aplicadas: ${result.alreadyApplied.join(', ') || 'ninguna'}`,
-  );
+/** Carpeta fija de migraciones del repositorio: el CLI no acepta otra ruta. */
+export const MIGRATIONS_DIR = fileURLToPath(new URL('../../infra/migrations', import.meta.url));
+
+// Por forma y no con instanceof: los errores de node:util pueden venir de otro contexto de ejecución.
+const describe = (error: unknown) =>
+  typeof error === 'object' &&
+  error !== null &&
+  'message' in error &&
+  typeof error.message === 'string' &&
+  error.message !== ''
+    ? error.message
+    : safeError(error);
+
+/** Aplica las migraciones desde la línea de comandos. Devuelve el código de salida. */
+export async function runMigrate(
+  args: string[],
+  load: (envFile: string) => Environment,
+  log: (line: string) => void,
+  directory: string = MIGRATIONS_DIR,
+): Promise<number> {
+  try {
+    const { values } = parseArgs({
+      args: args.filter((argument) => argument !== '--'),
+      options: { 'env-file': { type: 'string', default: '.env' } },
+    });
+    const environment = load(values['env-file']!);
+    authorizeMigration(environment);
+    const result = await migrate({ databaseUrl: required(environment, 'DATABASE_URL'), directory });
+    log(
+      `Migraciones aplicadas: ${result.applied.join(', ') || 'ninguna'}; ya aplicadas: ${result.alreadyApplied.join(', ') || 'ninguna'}`,
+    );
+    return 0;
+  } catch (error) {
+    log(describe(error));
+    return 1;
+  }
 }
 
 if (isMain(import.meta.url)) {
-  main().catch((error: unknown) => {
-    console.error(
-      error instanceof Error && !(error instanceof ConfigurationError)
-        ? error.message
-        : safeError(error),
-    );
-    process.exitCode = 1;
+  void runMigrate(
+    process.argv.slice(2),
+    (envFile) => loadEnvironment({ envFile }),
+    (line) => console.log(line),
+  ).then((code) => {
+    process.exitCode = code;
   });
 }

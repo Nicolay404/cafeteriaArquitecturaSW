@@ -72,36 +72,57 @@ export async function setFlag(options: {
   }
 }
 
-async function main() {
-  const { values, positionals } = parseArgs({
-    args: process.argv.slice(2).filter((argument) => argument !== '--'),
-    allowPositionals: true,
-    options: { 'env-file': { type: 'string', default: '.env' } },
-  });
-  const [key, value] = positionals;
-  const states: Record<string, boolean> = { on: true, true: true, off: false, false: false };
-  if (!key || value === undefined || !(value in states))
-    throw new Error('Uso: pnpm flags:set <clave> <on|off> [--env-file archivo]');
-  const environment = loadEnvironment({ envFile: values['env-file']! });
-  authorizeFlagWrite(environment);
-  const flag = await setFlag({
-    redisUrl: required(environment, 'REDIS_URL'),
-    prefix: required(environment, 'FEATURE_FLAGS_PREFIX'),
-    key,
-    enabled: states[value]!,
-  });
-  console.log(
-    `${flag.key}: ${flag.enabled ? 'encendido' : 'apagado'} (revisión ${flag.revision}, ${flag.changedAt})`,
-  );
+// Por forma y no con instanceof: los errores de node:util pueden venir de otro contexto de ejecución.
+const describe = (error: unknown) =>
+  typeof error === 'object' &&
+  error !== null &&
+  'message' in error &&
+  typeof error.message === 'string' &&
+  error.message !== ''
+    ? error.message
+    : safeError(error);
+
+const STATES: Record<string, boolean> = { on: true, true: true, off: false, false: false };
+
+/** Cambia un flag desde la línea de comandos. Devuelve el código de salida. */
+export async function runFlagsSet(
+  args: string[],
+  load: (envFile: string) => Environment,
+  log: (line: string) => void,
+): Promise<number> {
+  try {
+    const { values, positionals } = parseArgs({
+      args: args.filter((argument) => argument !== '--'),
+      allowPositionals: true,
+      options: { 'env-file': { type: 'string', default: '.env' } },
+    });
+    const [key, value] = positionals;
+    if (!key || value === undefined || !(value in STATES))
+      throw new Error('Uso: pnpm flags:set <clave> <on|off> [--env-file archivo]');
+    const environment = load(values['env-file']!);
+    authorizeFlagWrite(environment);
+    const flag = await setFlag({
+      redisUrl: required(environment, 'REDIS_URL'),
+      prefix: required(environment, 'FEATURE_FLAGS_PREFIX'),
+      key,
+      enabled: STATES[value]!,
+    });
+    log(
+      `${flag.key}: ${flag.enabled ? 'encendido' : 'apagado'} (revisión ${flag.revision}, ${flag.changedAt})`,
+    );
+    return 0;
+  } catch (error) {
+    log(describe(error));
+    return 1;
+  }
 }
 
 if (isMain(import.meta.url)) {
-  main().catch((error: unknown) => {
-    console.error(
-      error instanceof Error && !(error instanceof ConfigurationError)
-        ? error.message
-        : safeError(error),
-    );
-    process.exitCode = 1;
+  void runFlagsSet(
+    process.argv.slice(2),
+    (envFile) => loadEnvironment({ envFile }),
+    (line) => console.log(line),
+  ).then((code) => {
+    process.exitCode = code;
   });
 }
