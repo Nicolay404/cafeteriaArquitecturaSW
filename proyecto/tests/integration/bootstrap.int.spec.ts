@@ -31,6 +31,7 @@ describe('T015 — arranque coordinado e infraestructura', () => {
     mailpit = await new GenericContainer(
       'axllent/mailpit:v1.33.1@sha256:aef2aacc11f075ec0fb6874275ee4a421e688e11a96ebb296134d1735c7761ce',
     )
+      .withEnvironment({ MP_SMTP_DISABLE_RDNS: 'true' })
       .withExposedPorts(1025, 8025)
       .withWaitStrategy(Wait.forHttp('/readyz', 8025))
       .start();
