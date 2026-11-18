@@ -4,3 +4,9 @@ proyecto/** text eol=lf
 # Los hooks son scripts de shell: con CRLF dejarían de ejecutarse en Linux y macOS.
 .husky/* text eol=lf
 *.sh text eol=lf
+
+# Scripts de CI y workflows también deben conservar LF en Windows (Prettier exige LF).
+scripts/** text eol=lf
+.github/** text eol=lf
+*.toml text eol=lf
+lint-staged.config.mjs text eol=lf
