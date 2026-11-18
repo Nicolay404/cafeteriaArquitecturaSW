@@ -84,6 +84,18 @@ export function url(
   return value;
 }
 
+/**
+ * Secreto de aplicación: al menos 32 caracteres. Las claves concretas se derivan con HKDF, así que
+ * no hace falta un formato binario. Fuera de local se rechazan los valores de prueba de .env.example.
+ */
+export function secret(environment: Environment, variable: string, appEnv: string): string {
+  const value = required(environment, variable);
+  if (value.length < 32) throw new ConfigurationError(variable);
+  if (appEnv !== 'local' && value.startsWith('solo_pruebas_locales'))
+    throw new ConfigurationError(variable);
+  return value;
+}
+
 export function base(environment: Environment) {
   return {
     nodeEnv: choice(environment, 'NODE_ENV', ['development', 'test', 'production'] as const),
