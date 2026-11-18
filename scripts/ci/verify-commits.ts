@@ -208,8 +208,12 @@ async function verifyInWorktree(
     }
     return { status: 'ok' };
   } finally {
+    // La limpieza nunca puede tapar el veredicto: en Windows un proceso hijo (p. ej. Turbo)
+    // puede tardar en soltar el directorio, así que se reintenta y, si no se logra, se avisa.
     await run(top, 'worktree', 'remove', '--force', directory).catch(() => undefined);
-    await rm(directory, { recursive: true, force: true });
+    await rm(directory, { recursive: true, force: true, maxRetries: 10, retryDelay: 500 }).catch(
+      () => console.warn(`Aviso: no se pudo borrar el directorio temporal ${directory}`),
+    );
     await run(top, 'worktree', 'prune').catch(() => undefined);
   }
 }
