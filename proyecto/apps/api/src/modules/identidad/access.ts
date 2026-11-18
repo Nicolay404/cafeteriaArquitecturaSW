@@ -3,8 +3,9 @@ import type { Session } from './sessions.js';
 
 // FR-007/FR-008, research D-10: la decisión de acceso es una función pura que se comprueba en el
 // servidor en CADA operación. El rol vive en la sesión (que sale de la cuenta), nunca en lo que
-// envía el cliente. Seguro por defecto: personal y administradores necesitan el segundo factor
-// verificado para cualquier función; solo las rutas del propio flujo de MFA pueden saltarlo.
+// envía el cliente. Seguro por defecto: una sesión con el segundo factor pendiente (siempre el de
+// personal y administradores; el de un cliente solo si lo activó) no sirve para ninguna función;
+// solo las rutas del propio flujo de MFA pueden usarla.
 
 export interface AccessRule {
   /** Roles autorizados; vacío o ausente = cualquier usuario autenticado. */
@@ -23,8 +24,6 @@ export type AccessDenial = {
 };
 
 export type AccessDecision = { ok: true } | ({ ok: false } & AccessDenial);
-
-const STAFF: readonly Rol[] = ['personal', 'admin'];
 
 const deny = (denial: AccessDenial): AccessDecision => ({ ok: false, ...denial });
 
@@ -45,7 +44,7 @@ export function evaluateAccess(
       codigo: 'rol_no_permitido',
       mensaje: 'Tu cuenta no tiene permiso para esta función.',
     });
-  if (STAFF.includes(session.rol) && !session.mfaVerificado && !rule.allowPartialMfa)
+  if (!session.mfaVerificado && !rule.allowPartialMfa)
     return deny({
       status: 403,
       codigo: 'mfa_requerido',
