@@ -10,5 +10,9 @@
     "tests/e2e/**/*.ts",
     "tests/smoke/**/*.ts",
     "../scripts/ci/**/*.ts"
-  ]
+  ],
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
+  }
 }
