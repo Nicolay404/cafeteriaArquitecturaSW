@@ -68,7 +68,10 @@ describe('CLI contra servicios reales', () => {
     });
 
     test('se niega fuera de local sin escribir', async () => {
-      const result = await run(['capacidad-tecnica-de-prueba', 'on'], env({ APP_ENV: 'staging' }));
+      const result = await run(
+        ['capacidad-tecnica-de-prueba', 'on'],
+        env({ APP_ENV: 'production' }),
+      );
       expect(result.code).toBe(1);
       expect(result.text).toMatch(/no autorizada/);
     });
