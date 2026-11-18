@@ -108,12 +108,12 @@ describe('CLI contra servicios reales', () => {
       const first = await run([], environment);
       expect(first).toEqual({
         code: 0,
-        text: 'Migraciones aplicadas: 001; ya aplicadas: ninguna',
+        text: 'Migraciones aplicadas: 001, 010, 011; ya aplicadas: ninguna',
       });
       const second = await run(['--'], environment);
       expect(second).toEqual({
         code: 0,
-        text: 'Migraciones aplicadas: ninguna; ya aplicadas: 001',
+        text: 'Migraciones aplicadas: ninguna; ya aplicadas: 001, 010, 011',
       });
     });
 
