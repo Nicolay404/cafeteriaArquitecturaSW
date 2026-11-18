@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { contrasenaNueva, correo, nombre } from './identidad.js';
+import { contrasenaNueva, correo, nombre } from './identidad.ts';
 
 // Spec #2 — contrato HTTP de Clientes. Solo datos del propio cliente: el id sale de la sesión.
 
