@@ -1,0 +1,8 @@
+# OSV-Scanner: sin excepciones. Las vulnerabilidades altas o críticas bloquean el merge
+# (constitución II). Si el equipo aprueba una excepción, debe ser TEMPORAL y quedar aquí con
+# motivo y fecha de caducidad, por ejemplo:
+#
+# [[IgnoredVulns]]
+# id = "GHSA-xxxx-xxxx-xxxx"
+# ignoreUntil = 2026-12-31
+# reason = "Solo afecta a una herramienta de desarrollo; sin parche publicado. Aprobada por el equipo el AAAA-MM-DD."

@@ -39,7 +39,7 @@
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json && turbo run typecheck",
     "lint": "eslint apps packages scripts tests playwright.config.ts vitest.config.ts",
-    "format:check": "prettier --check --config .prettierrc.json apps packages scripts tests ../scripts/ci playwright.config.ts vitest.config.ts package.json pnpm-workspace.yaml turbo.json tsconfig.json eslint.config.mjs .prettierrc.json",
+    "format:check": "prettier --check --config .prettierrc.json apps packages scripts tests ../scripts/ci ../.github playwright.config.ts vitest.config.ts package.json pnpm-workspace.yaml turbo.json tsconfig.json eslint.config.mjs .prettierrc.json",
     "build": "turbo run build",
     "env:check": "tsx scripts/env-check.ts",
     "test:config": "vitest run tests/unit/config.spec.ts",
