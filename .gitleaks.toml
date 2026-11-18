@@ -1,0 +1,10 @@
+# Gitleaks: reglas por defecto más UNA excepción mínima y justificada.
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "El identificador del proyecto de Sonar es público (aparece en la URL del panel), no una credencial."
+regexTarget = "match"
+regexes = ['''^sonar\.projectKey=[A-Za-z0-9_.:-]+$''']
+paths = ['''proyecto/sonar-project\.properties''']
+condition = "AND"
