@@ -296,6 +296,9 @@ importers:
         specifier: 4.6.7
         version: 4.6.7
     devDependencies:
+      '@cafeteria/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
       '@types/nodemailer':
         specifier: 8.0.2
         version: 8.0.2
