@@ -44,8 +44,8 @@ Formato: `- [ ] T### [P] [US#] Descripción con ruta`. Rutas relativas a la raí
 - [X] T018 [US1] Implementar en Clientes la creación de `persona` cifrada y `ContactoDeCuenta` en `proyecto/apps/api/src/modules/clientes/personas.repository.ts`.
 - [X] T019 [US1] Implementar el servicio y controlador de registro, confirmación y reenvío (con hash ficticio para igualar tiempos) en `proyecto/apps/api/src/modules/identidad/registration.service.ts` y `proyecto/apps/api/src/modules/identidad/auth.controller.ts`.
 - [X] T020 [US1] Implementar acceso, cierre de sesión, recuperación y restablecimiento con límites de T008 y eventos de seguridad en `proyecto/apps/api/src/modules/identidad/login.service.ts` y `auth.controller.ts`.
-- [ ] T021 [P] [US1] Construir las pantallas `registro`, `confirmar`, `acceso` y `recuperar` en `proyecto/apps/web/src/app/(cuenta)/` con los componentes de T010 (`autocomplete` correcto, foco al primer error, mensajes que dicen cómo corregir, sin límites de tiempo) usando la skill `design-taste-frontend`.
-- [ ] T022 [US1] E2E y axe del flujo completo de US1 con Mailpit en `proyecto/tests/e2e/identidad-us1.spec.ts` (solo teclado; sin violaciones axe AAA aplicables).
+- [X] T021 [P] [US1] Construir las pantallas `registro`, `confirmar`, `acceso` y `recuperar` en `proyecto/apps/web/src/app/(cuenta)/` con los componentes de T010 (`autocomplete` correcto, foco al primer error, mensajes que dicen cómo corregir, sin límites de tiempo) usando la skill `design-taste-frontend`.
+- [X] T022 [US1] E2E y axe del flujo completo de US1 con Mailpit en `proyecto/tests/e2e/identidad-us1.spec.ts` (solo teclado; sin violaciones axe AAA aplicables).
 - [ ] T023 [US1] Registrar la evidencia (comandos, resultados, prueba manual con NVDA) en `specs/002-identidad-clientes/evidence/us1.md` y marcar las tareas verificadas.
 
 ## Fase 4: US2 — Personal y administradores con doble factor (P1)
