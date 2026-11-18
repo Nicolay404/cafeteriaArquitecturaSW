@@ -1,6 +1,7 @@
 import { ESLint } from 'eslint';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+import { PedidosEnMemoria } from '../fixtures/pedidos-por-cliente.js';
 
 // T019 — Constitución V: ningún módulo importa la implementación de otro; solo su index.ts.
 // Se ejecuta el ESLint real del workspace (no una copia de la regla) sobre código en memoria
@@ -56,6 +57,39 @@ describe('límites entre módulos de dominio', () => {
       "import { PedidosModule } from '../modules/pedidos/pedidos.module.js';\nexport const x = PedidosModule;\n",
     );
     expect(found).not.toEqual([]);
+  });
+
+  it('Identidad no puede importar la implementación interna de Clientes (T014)', async () => {
+    const identidad = 'apps/api/src/modules/identidad/ilegal.ts';
+    expect(
+      await violations(
+        identidad,
+        "import { PiiCipher } from '../clientes/pii-cipher.js';\nexport const x = PiiCipher;\n",
+      ),
+    ).not.toEqual([]);
+    expect(
+      await violations(
+        identidad,
+        "import type { ContactoDeCuenta } from '../clientes/index.js';\nexport type X = ContactoDeCuenta;\n",
+      ),
+    ).toEqual([]);
+  });
+
+  it('el doble de PedidosPorCliente ordena por fecha y detecta pedidos en curso (T014)', async () => {
+    const pedidos = new PedidosEnMemoria();
+    const base = { totalCentavos: 450 };
+    pedidos.agregar('p1', { ...base, id: 'a', fecha: '2026-11-01T10:00:00Z', estado: 'entregado' });
+    pedidos.agregar('p1', { ...base, id: 'b', fecha: '2026-11-10T10:00:00Z', estado: 'entregado' });
+    expect((await pedidos.listar('p1')).map((pedido) => pedido.id)).toEqual(['b', 'a']);
+    expect(await pedidos.hayEnCurso('p1')).toBe(false);
+    pedidos.agregar('p1', {
+      ...base,
+      id: 'c',
+      fecha: '2026-11-12T10:00:00Z',
+      estado: 'en_preparacion',
+    });
+    expect(await pedidos.hayEnCurso('p1')).toBe(true);
+    expect(await pedidos.listar('otro')).toEqual([]);
   });
 
   it('el código real del repositorio no tiene violaciones de límites', async () => {
