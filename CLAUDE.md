@@ -10,6 +10,7 @@ Monorepo pnpm/Turborepo en `proyecto/` (Spec #1 en curso). Comandos desde `proye
 - `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm build`
 - `pnpm test:unit` (Vitest config/web + Jest API/worker), `pnpm test:integration` (Testcontainers, requiere Docker), `pnpm coverage:merge`
 - `pnpm test:e2e` / `pnpm test:smoke` (Playwright; smoke exige `SMOKE_WEB_URL` y `SMOKE_API_URL`)
+- Commits: Conventional Commits con alcance obligatorio (`feat(pedidos): ...`); lo valida el hook `commit-msg` (se activa con `pnpm install`). Verificar el historial de un PR: `pnpm exec tsx ../scripts/ci/verify-commits.ts --repo .. --base <rama-base>`
 - `pnpm dev`, `pnpm infra:check`, `pnpm env:check` (con `--env-file .env.example` si no hay `.env`)
 - Un solo test: `pnpm exec vitest run tests/unit/config.spec.ts`, `pnpm test:integration --runTestsByPath tests/integration/web.int.spec.ts`, `node --experimental-vm-modules node_modules/jest/bin/jest.js --config tests/unit/jest.config.ts apps/api/src/platform/health.controller.spec.ts`
 

@@ -87,9 +87,10 @@ Evaluación de lo que existe, no cumplimiento probado del producto.
 | H-02 | Sin cabeceras de seguridad | Medio | Definir la política mínima (CSP compatible con el inicio actual, nosniff, referrer, frames) y probarla; revisar con la UI aprobada | Endurecimiento y T038 |
 | H-03 | API escucha en `0.0.0.0` en desarrollo | Bajo en local | Host configurable: `127.0.0.1` por defecto en desarrollo y `0.0.0.0` en contenedor | Endurecimiento |
 | H-04 | Sin límite de peticiones en readiness | Bajo ahora | Valorar caché corta del resultado o limitación; documentar la decisión | T049 y revisión de carga |
-| H-05 | Sin escaneo de secretos, dependencias ni imágenes | Medio | Gitleaks, OSV, Trivy y CodeQL en CI | T028 |
+| H-05 | Sin escaneo automático de secretos, dependencias ni imágenes | Medio | Workflows de Gitleaks, OSV, Trivy y CodeQL **preparados en T028, aún sin ejecutar en GitHub**; Gitleaks, Trivy y OSV ya se ejecutaron a mano (historial sin fugas, Trivy limpio). Imágenes: T042 | T031, T042 |
+| H-06 | OSV detecta 2 vulnerabilidades altas (picomatch ≤ 4.0.7, ReDoS, **sin parche publicado**) y 4 medias en dependencias de **desarrollo** (Jest, Vite, Testcontainers) | Medio, no se despliega | Esperar parche o excepción temporal aprobada por el equipo, con motivo y caducidad en `osv-scanner.toml`; no se creó ninguna | Decisión del equipo antes de T031 |
 
-Los cinco hallazgos están **abiertos**: ninguno se corrigió en T021. H-01 a H-03 son cambios pequeños y verificables que pueden entrar como commits separados antes del cierre del Spec #1; el equipo decide si se hacen antes de fusionar H0 o después.
+Los hallazgos H-01 a H-04 siguen **abiertos** y H-05/H-06 dependen de la ejecución real del pipeline (T031); ninguno se corrigió en T021. H-01 a H-03 son cambios pequeños y verificables que pueden entrar como commits separados antes del cierre del Spec #1; el equipo decide si se hacen antes de fusionar H0 o después.
 
 ## 8. Qué no certifica este documento
 
