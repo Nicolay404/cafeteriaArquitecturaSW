@@ -113,10 +113,10 @@ const deMayorAMenor = (ranuras: readonly Ranura[]): Ranura[] =>
 function planificarNxM(ranuras: readonly Ranura[], lleva: number, paga: number): Aplicacion[] {
   const ordenadas = deMayorAMenor(ranuras);
   const completas = ordenadas.length - (ordenadas.length % lleva);
+  // Todas las unidades del grupo quedan consumidas por la promoción, también las que se pagan.
   return ordenadas
     .slice(0, completas)
-    .filter((_ranura, i) => i % lleva >= paga)
-    .map((ranura) => ({ ranura, descuento: ranura.restante }));
+    .map((ranura, i) => ({ ranura, descuento: i % lleva >= paga ? ranura.restante : 0 }));
 }
 
 type ValorCombo = Extract<Promocion['valor'], { tipo: 'combo' }>;
@@ -146,34 +146,31 @@ function planificarCombo(ranuras: readonly Ranura[], combo: ValorCombo): Aplicac
   return aplicaciones;
 }
 
-/** Descuentos que aplicaría `promocion` sobre las ranuras en su estado actual. */
+const porUnidad = (ranuras: readonly Ranura[], descuento: (r: Ranura) => Centavos): Aplicacion[] =>
+  ranuras
+    .map((ranura) => ({ ranura, descuento: descuento(ranura) }))
+    .filter((a) => a.descuento > 0);
+
+/**
+ * Unidades que usaría `promocion` en el estado actual de las ranuras y su descuento. Porcentaje y
+ * monto fijo solo usan las unidades a las que descuentan algo; N×M y combo consumen todas las
+ * unidades de cada grupo o conjunto completo, aunque alguna no reciba descuento (R5).
+ */
 function planificar(promocion: Promocion, ranuras: readonly Ranura[]): Aplicacion[] {
   const valor = promocion.valor;
   const elegibles = ranuras.filter(
     (ranura) => enAlcance(promocion, ranura.linea) && elegible(promocion, ranura),
   );
-  let aplicaciones: Aplicacion[];
   switch (valor.tipo) {
     case 'porcentaje':
-      aplicaciones = elegibles.map((ranura) => ({
-        ranura,
-        descuento: descuentoPorcentual(ranura.restante, valor.puntosBasicos),
-      }));
-      break;
+      return porUnidad(elegibles, (r) => descuentoPorcentual(r.restante, valor.puntosBasicos));
     case 'monto_fijo':
-      aplicaciones = elegibles.map((ranura) => ({
-        ranura,
-        descuento: Math.min(valor.centavos, ranura.restante),
-      }));
-      break;
+      return porUnidad(elegibles, (r) => Math.min(valor.centavos, r.restante));
     case 'nxm':
-      aplicaciones = planificarNxM(elegibles, valor.lleva, valor.paga);
-      break;
+      return planificarNxM(elegibles, valor.lleva, valor.paga);
     case 'combo':
-      aplicaciones = planificarCombo(elegibles, valor);
-      break;
+      return planificarCombo(elegibles, valor);
   }
-  return aplicaciones.filter((aplicacion) => aplicacion.descuento > 0);
 }
 
 const total = (aplicaciones: readonly Aplicacion[]): Centavos =>

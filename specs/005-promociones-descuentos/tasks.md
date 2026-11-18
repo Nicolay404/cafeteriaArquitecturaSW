@@ -65,8 +65,8 @@ Rutas relativas a `proyecto/`; `promociones/` = `apps/api/src/modules/promocione
 **Goal**: prioridad, acumulación y determinismo.
 **Independent Test**: batería de carritos con promociones solapadas y precio esperado.
 
-- [ ] T015 [US3] TDD en `promociones/dominio/motor-combinacion.spec.ts`: dos no acumulables → mayor prioridad; igual prioridad → más favorable; empate total → menor ID; acumulable + no acumulable; varias acumulables sobre el precio restante; producto en varias categorías (US3.1–2) + ajustes del motor (LOCAL).
-- [ ] T016 [US3] Batería SC-002 en `motor-combinacion.spec.ts`: ≥ 20 casos tabulados con resultado a mano, y prueba de determinismo con las líneas y promociones permutadas y repetidas (US3.3) (LOCAL).
+- [x] T015 [US3] TDD en `promociones/dominio/motor-combinacion.spec.ts`: dos no acumulables → mayor prioridad; igual prioridad → más favorable; empate total → menor ID; acumulable + no acumulable; varias acumulables sobre el precio restante; producto en varias categorías (US3.1–2) + ajustes del motor (LOCAL).
+- [x] T016 [US3] Batería SC-002 en `motor-combinacion.spec.ts`: ≥ 20 casos tabulados con resultado a mano, y prueba de determinismo con las líneas y promociones permutadas y repetidas (US3.3) (LOCAL).
 
 ---
 

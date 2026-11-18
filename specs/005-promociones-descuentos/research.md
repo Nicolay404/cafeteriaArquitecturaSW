@@ -39,6 +39,7 @@ Determinista y documentado; el carrito muestra qué promociones se aplicaron.
    - **Porcentaje**: por unidad, con la regla de R3.
    - **Monto fijo**: por unidad, `min(monto, precio restante)` → nunca negativo (US2.2).
    - **N×M**: entre las ranuras elegibles del alcance, ordenadas por precio restante descendente (empate → `productoId`), cada grupo completo de N deja gratis sus N−M unidades más baratas. 3 unidades en 2x1 → paga 2 (US2.3).
+   - **Consumo de grupos**: N×M y combo consumen **todas** las unidades de cada grupo o conjunto completo, también las que se pagan. Así, si no son acumulables, la unidad pagada de un 2x1 no recibe además otra promoción; las unidades sin grupo completo siguen libres (batería, casos 08, 20, 22 y 23).
    - **Combo**: conjunto de productos (con cantidades) y precio especial. Se forman tantos conjuntos completos como permitan las ranuras elegibles (edge case «varias veces»), tomando por producto las unidades de mayor precio restante. El descuento del conjunto (`suma − precio combo`, si es > 0) se reparte entre sus unidades proporcionalmente al precio, con el resto de centavos asignado por orden de ranura para que la suma sea exacta.
 6. Resultado idéntico para el mismo carrito, mismas promociones y mismo instante, sin importar el orden de entrada (las líneas y promociones se ordenan por ID antes de calcular).
 
