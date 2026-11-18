@@ -305,3 +305,7 @@ Flags técnicos en Redis con lectura en runtime y valor seguro apagado, escritur
 ## T031, T032 y T034 — 2026-11-18 (ensayo real de US1)
 
 Seis PR de ensayo con fixtures sintéticos (#5 a #10, cerrados sin fusionar): cada control bloquea por su causa, y un commit intermedio roto se detecta con su SHA aunque la cabeza esté verde. PR de 13 commits de código: 4 min 31 s de pared (SC-001: menos de 15 min). **Hallazgos:** Trivy no calificó como altas las alertas de lodash que OSV sí; el fallo intermitente **no está conectado al pipeline**; la aprobación obligatoria aún no se ejercitó en un PR real. Evidencia: [us1-controls.md](evidence/us1-controls.md), [ci-timing.md](evidence/ci-timing.md), [us1-acceptance.md](evidence/us1-acceptance.md). Con esto US1 queda cumplida en sus escenarios 1 a 5, con dos huecos de funcionalidad documentados.
+
+## Fallo intermitente de US1 — 2026-11-18
+
+`check-attempts.ts` compara los intentos de un run con la API de Actions y bloquea un reintento verde que oculta un fallo previo, conservando la causa original; conectado a «Calidad del PR» y «Seguridad». Ensayo real en el PR #12 (bloqueado en el intento 2 con la causa del intento 1) y 19 pruebas unitarias. Cierra el hueco que dejó la auditoría T034. Evidencia: [evidence/us1-controls.md](evidence/us1-controls.md).
