@@ -37,7 +37,7 @@ Tests obligatorios por constitución VI: casos antes de comportamiento, verifica
 - [X] T018 Probar inicio básico→API, semántica/teclado/foco/axe en `proyecto/tests/e2e/bootstrap.spec.ts` y `proyecto/tests/smoke/bootstrap.spec.ts`; E2E arranca/espera apps, sin requerir diseño/material final (dep. T017).
 - [X] T019 Verificar instalación/build congelados e import prohibido en `proyecto/tests/unit/module-boundaries.spec.ts`; guardar versiones/lockfile intacto/reportes en `specs/001-plataforma-entrega/evidence/local-quality.md` (dep. T018).
 - [X] T020 Documentar arranque real/puertos/entorno/errores/segundo arranque/parada sin borrar volúmenes en `README.md` y `specs/001-plataforma-entrega/evidence/bootstrap-procedure.md`, sin cambiar spec/plan (dep. T019).
-- [ ] T021 Registrar amenazas iniciales/ASVS L2 de superficie, inventario aún sin recolección, límites CU003 y Constitution Check documental en `specs/001-plataforma-entrega/decisions/platform-baseline.md`, sin certificar cloud ni implementar identidad (dep. T020).
+- [X] T021 Registrar amenazas iniciales/ASVS L2 de superficie, inventario aún sin recolección, límites CU003 y Constitution Check documental en `specs/001-plataforma-entrega/decisions/platform-baseline.md`, sin certificar cloud ni implementar identidad (dep. T020).
 - [ ] T022 Proponer a una compañera repetir T002–T020 desde clon/copia limpia del candidato sin .env/cache/instalación privada del autor y registrar aceptación/fallas H0 en `specs/001-plataforma-entrega/evidence/clean-clone.md`; no crear sprint ni asignar otro spec (dep. T021).
 
 **Puerta H0:** arranque/pruebas locales reales reproducidos independientemente. No es aprobación visual ni SC-009. Si el candidato aún no está publicado, usar copia limpia sin archivos ignorados; no hacer push implícito para esta revisión.
@@ -285,3 +285,7 @@ Clon limpio del candidato (solo lo commiteado, sin node_modules, .env ni caché 
 ## T020 verificada — 2026-11-18
 
 README reescrito con el arranque real (instalación, entorno, Compose, puertos, dev, parada y segundo arranque) y una tabla de errores frecuentes tomados de fallos provocados: sin .env, variable ausente, puerto ocupado e infraestructura apagada. Se comprobó que la parada sin -v conserva los volúmenes y que una fila técnica de Postgres sobrevive al segundo arranque de Compose. El arranque de dev y su parada con Ctrl+C remiten a T015. Solo probado en Windows. Evidencia: [evidence/bootstrap-procedure.md](evidence/bootstrap-procedure.md).
+
+## T021 registrada — 2026-11-18
+
+Línea base de seguridad y datos en [decisions/platform-baseline.md](decisions/platform-baseline.md): superficie medida, 10 amenazas iniciales, revisión orientativa por áreas de ASVS L2 (no auditoría), inventario sin datos personales, límites de CU003 y Constitution Check documental. Deja **5 hallazgos abiertos** (H-01 X-Powered-By, H-02 sin cabeceras de seguridad, H-03 API en 0.0.0.0, H-04 sin límite en readiness, H-05 sin escaneo de secretos/dependencias hasta T028); ninguno se corrigió aquí. pnpm audit de producción limpio y sin secretos en lo versionado. No certifica cloud, identidad ni cumplimiento. **H0 queda pendiente solo de T022** (repetición independiente desde clon limpio).
