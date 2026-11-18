@@ -17,6 +17,8 @@ export interface LineaACotizar {
 export interface SolicitudCotizacion {
   lineas: readonly LineaACotizar[];
   codigoCupon?: string;
+  /** Obligatorio si hay codigoCupon: ID de cliente (o IP mientras Identidad no exista). FR-012. */
+  sujeto?: string;
   /** Solo para simulación del administrador; si falta, el servidor usa su reloj. */
   instante?: Date;
 }
@@ -83,7 +85,8 @@ Se evalúan en este orden sobre la promoción activa (no archivada ni pausada) c
 - Todos los importes son enteros en centavos de USD.
 - Una promoción fuera de `[inicio, fin)` o no `activa` nunca aparece en la cotización.
 - `cotizar` no tiene efectos secundarios, salvo el contador de intentos de cupón fallidos (FR-012).
-- Errores: `SolicitudInvalida` (cantidad o precio no enteros o negativos, línea duplicada por `productoId`), `DemasiadosIntentosCupon`.
+- Errores: `SolicitudInvalida` (cantidad o precio no enteros o negativos, línea duplicada por `productoId`, cupón sin `sujeto`), `DemasiadosIntentosCupon` (10 códigos no válidos en 15 min por sujeto; mensaje con cuándo reintentar).
+- Solo los códigos `no_valido` cuentan como intento fallido. Si el almacén de intentos (Redis) falla, la cotización continúa sin límite (falla abierta, R6).
 
 ## Lo que este contrato NO hace
 

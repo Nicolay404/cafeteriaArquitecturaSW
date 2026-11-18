@@ -70,6 +70,11 @@ export interface LineaACotizar {
 export interface SolicitudCotizacion {
   readonly lineas: readonly LineaACotizar[];
   readonly codigoCupon?: string;
+  /**
+   * Obligatorio si hay `codigoCupon`: a quién se limitan los intentos fallidos (FR-012). ID de
+   * cliente de Identidad; mientras Identidad no exista, la IP.
+   */
+  readonly sujeto?: string;
   /** Solo para simulación del administrador; si falta, el servidor usa su reloj. */
   readonly instante?: Date;
 }
