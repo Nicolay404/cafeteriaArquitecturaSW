@@ -289,33 +289,45 @@ export function evaluarEjecuciones(intentos: Intento[]): EvaluacionEjecuciones {
 
 // ---- CLI ----
 
-/** Carpeta predeterminada de informes: el CLI nunca lee rutas libres, solo nombres dentro de ella. */
+/** Carpeta predeterminada de informes. */
 export const DEFAULT_REPORTS_DIR = 'quality-reports';
 
-const REPORT_NAME = /^[A-Za-z0-9][A-Za-z0-9_.-]*\.json$/;
+/**
+ * Los informes tienen nombres FIJOS dentro de la carpeta: los argumentos del CLI solo indican
+ * cuáles leer y nunca contienen una ruta ni un nombre de archivo, así que no hay forma de
+ * apuntar a otro lugar (path traversal).
+ */
+export const REPORT_FILES = {
+  result: 'resultado-calidad.json',
+  measures: 'metricas-sonar.json',
+  gitleaks: 'gitleaks.json',
+  trivy: 'trivy.json',
+} as const;
 
-/** Valida el nombre de un informe (sin rutas ni `..`) y lo resuelve dentro de `directory`. */
-export function reportPath(directory: string, name: string): string {
-  if (!REPORT_NAME.test(name) || name.includes('..'))
-    throw new Error(
-      `Nombre de informe no válido: «${name}» (se espera un archivo .json sin rutas)`,
-    );
-  return join(directory, name);
-}
+export type ReportKind = keyof typeof REPORT_FILES;
 
 export interface CliIo {
   reportsDir: string;
   log: (line: string) => void;
 }
 
-function readReport(io: CliIo, name: string, label: string): unknown {
-  const path = reportPath(io.reportsDir, name);
+function readReport(io: CliIo, kind: ReportKind, label: string): unknown {
   try {
-    return JSON.parse(readFileSync(path, 'utf8')) as unknown;
+    return JSON.parse(readFileSync(join(io.reportsDir, REPORT_FILES[kind]), 'utf8')) as unknown;
   } catch {
-    throw new Error(`No se pudo leer ${label} (${name}): se trata como ausente`);
+    throw new Error(`No se pudo leer ${label} (${REPORT_FILES[kind]}): se trata como ausente`);
   }
 }
+
+// Por forma y no con instanceof: los errores de node:util pueden venir de otro contexto de ejecución.
+const messageOf = (error: unknown, fallback: string) =>
+  typeof error === 'object' &&
+  error !== null &&
+  'message' in error &&
+  typeof error.message === 'string' &&
+  error.message !== ''
+    ? error.message
+    : fallback;
 
 /** Evalúa la puerta de calidad desde la línea de comandos. Devuelve el código de salida. */
 export function runQualityGate(args: string[], io: CliIo): number {
@@ -324,17 +336,17 @@ export function runQualityGate(args: string[], io: CliIo): number {
     ({ values } = parseArgs({
       args,
       options: {
-        result: { type: 'string' },
-        measures: { type: 'string' },
+        result: { type: 'boolean', default: false },
+        measures: { type: 'boolean', default: false },
         sha: { type: 'string' },
         modules: { type: 'string', default: '' },
         docs: { type: 'boolean', default: false },
-        gitleaks: { type: 'string' },
-        trivy: { type: 'string' },
+        gitleaks: { type: 'boolean', default: false },
+        trivy: { type: 'boolean', default: false },
       },
     }));
   } catch (error) {
-    io.log(error instanceof Error ? error.message : 'Argumentos no válidos');
+    io.log(messageOf(error, 'Argumentos no válidos'));
     return 1;
   }
   if (!values.sha) {
@@ -356,10 +368,9 @@ export function runQualityGate(args: string[], io: CliIo): number {
 
   let resultado: ResultadoCalidad | undefined;
   try {
-    if (values.result)
-      resultado = parseResultadoCalidad(readReport(io, values.result, 'el resultado'));
+    if (values.result) resultado = parseResultadoCalidad(readReport(io, 'result', 'el resultado'));
     else if (values.measures) {
-      const raw = readReport(io, values.measures, 'las métricas');
+      const raw = readReport(io, 'measures', 'las métricas');
       if (!isRecord(raw)) throw new Error('Las métricas de Sonar deben ser un objeto');
       resultado = fromSonarMeasures(raw as Parameters<typeof fromSonarMeasures>[0]);
     }
@@ -380,10 +391,10 @@ export function runQualityGate(args: string[], io: CliIo): number {
       apply(
         evaluarSeguridad({
           secretos: values.gitleaks
-            ? contarHallazgosGitleaks(readReport(io, values.gitleaks, 'el informe de Gitleaks'))
+            ? contarHallazgosGitleaks(readReport(io, 'gitleaks', 'el informe de Gitleaks'))
             : 0,
           altasCriticas: values.trivy
-            ? contarHallazgosTrivy(readReport(io, values.trivy, 'el informe de Trivy'))
+            ? contarHallazgosTrivy(readReport(io, 'trivy', 'el informe de Trivy'))
             : 0,
         }),
       );
