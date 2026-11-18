@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
 
@@ -289,46 +289,82 @@ export function evaluarEjecuciones(intentos: Intento[]): EvaluacionEjecuciones {
 
 // ---- CLI ----
 
-function readJson(path: string, name: string): unknown {
+/** Carpeta predeterminada de informes: el CLI nunca lee rutas libres, solo nombres dentro de ella. */
+export const DEFAULT_REPORTS_DIR = 'quality-reports';
+
+const REPORT_NAME = /^[A-Za-z0-9][A-Za-z0-9_.-]*\.json$/;
+
+/** Valida el nombre de un informe (sin rutas ni `..`) y lo resuelve dentro de `directory`. */
+export function reportPath(directory: string, name: string): string {
+  if (!REPORT_NAME.test(name) || name.includes('..'))
+    throw new Error(
+      `Nombre de informe no válido: «${name}» (se espera un archivo .json sin rutas)`,
+    );
+  return join(directory, name);
+}
+
+export interface CliIo {
+  reportsDir: string;
+  log: (line: string) => void;
+}
+
+function readReport(io: CliIo, name: string, label: string): unknown {
+  const path = reportPath(io.reportsDir, name);
   try {
-    return JSON.parse(readFileSync(resolve(path), 'utf8')) as unknown;
+    return JSON.parse(readFileSync(path, 'utf8')) as unknown;
   } catch {
-    throw new Error(`No se pudo leer ${name} (${path}): se trata como ausente`);
+    throw new Error(`No se pudo leer ${label} (${name}): se trata como ausente`);
   }
 }
 
-function main() {
-  const { values } = parseArgs({
-    options: {
-      result: { type: 'string' },
-      measures: { type: 'string' },
-      sha: { type: 'string' },
-      modules: { type: 'string', default: '' },
-      docs: { type: 'boolean', default: false },
-      gitleaks: { type: 'string' },
-      trivy: { type: 'string' },
-    },
-  });
-  if (!values.sha) throw new Error('Falta --sha: el commit que se evalúa');
+/** Evalúa la puerta de calidad desde la línea de comandos. Devuelve el código de salida. */
+export function runQualityGate(args: string[], io: CliIo): number {
+  let values;
+  try {
+    ({ values } = parseArgs({
+      args,
+      options: {
+        result: { type: 'string' },
+        measures: { type: 'string' },
+        sha: { type: 'string' },
+        modules: { type: 'string', default: '' },
+        docs: { type: 'boolean', default: false },
+        gitleaks: { type: 'string' },
+        trivy: { type: 'string' },
+      },
+    }));
+  } catch (error) {
+    io.log(error instanceof Error ? error.message : 'Argumentos no válidos');
+    return 1;
+  }
+  if (!values.sha) {
+    io.log('Falta --sha: el commit que se evalúa');
+    return 1;
+  }
+
   const razones: string[] = [];
   let aprobado = true;
   const apply = (evaluacion: Evaluacion) => {
     aprobado &&= evaluacion.aprobado;
     razones.push(...evaluacion.razones);
-    for (const item of evaluacion.noAplica) console.log(`No aplica: ${item}`);
+    for (const item of evaluacion.noAplica) io.log(`No aplica: ${item}`);
+  };
+  const fail = (error: unknown, fallback: string) => {
+    razones.push(error instanceof Error ? error.message : fallback);
+    aprobado = false;
   };
 
   let resultado: ResultadoCalidad | undefined;
   try {
-    if (values.result) resultado = parseResultadoCalidad(readJson(values.result, 'el resultado'));
+    if (values.result)
+      resultado = parseResultadoCalidad(readReport(io, values.result, 'el resultado'));
     else if (values.measures) {
-      const raw = readJson(values.measures, 'las métricas');
+      const raw = readReport(io, values.measures, 'las métricas');
       if (!isRecord(raw)) throw new Error('Las métricas de Sonar deben ser un objeto');
       resultado = fromSonarMeasures(raw as Parameters<typeof fromSonarMeasures>[0]);
     }
   } catch (error) {
-    razones.push(error instanceof Error ? error.message : 'Resultado de Sonar no válido');
-    aprobado = false;
+    fail(error, 'Resultado de Sonar no válido');
   }
   if (aprobado || resultado)
     apply(
@@ -344,32 +380,29 @@ function main() {
       apply(
         evaluarSeguridad({
           secretos: values.gitleaks
-            ? contarHallazgosGitleaks(readJson(values.gitleaks, 'el informe de Gitleaks'))
+            ? contarHallazgosGitleaks(readReport(io, values.gitleaks, 'el informe de Gitleaks'))
             : 0,
           altasCriticas: values.trivy
-            ? contarHallazgosTrivy(readJson(values.trivy, 'el informe de Trivy'))
+            ? contarHallazgosTrivy(readReport(io, values.trivy, 'el informe de Trivy'))
             : 0,
         }),
       );
     } catch (error) {
-      razones.push(error instanceof Error ? error.message : 'Informe de seguridad no válido');
-      aprobado = false;
+      fail(error, 'Informe de seguridad no válido');
     }
   }
 
-  if (aprobado) console.log('Puerta de calidad: APROBADA');
+  if (aprobado) io.log('Puerta de calidad: APROBADA');
   else {
-    console.log('Puerta de calidad: BLOQUEADA');
-    for (const razon of [...new Set(razones)]) console.log(`  - ${razon}`);
+    io.log('Puerta de calidad: BLOQUEADA');
+    for (const razon of new Set(razones)) io.log(`  - ${razon}`);
   }
-  process.exitCode = aprobado ? 0 : 1;
+  return aprobado ? 0 : 1;
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
-  try {
-    main();
-  } catch (error) {
-    console.error(error instanceof Error ? error.message : 'No se pudo evaluar la calidad');
-    process.exitCode = 1;
-  }
+  process.exitCode = runQualityGate(process.argv.slice(2), {
+    reportsDir: resolve(DEFAULT_REPORTS_DIR),
+    log: (line) => console.log(line),
+  });
 }
