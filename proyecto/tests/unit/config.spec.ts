@@ -16,6 +16,30 @@ const input = (overrides: Record<string, string | undefined> = {}) => ({
   environment: { ...example, ...overrides },
 });
 
+describe('secretos de Identidad (Spec #2)', () => {
+  it.each(['PII_KEY_1', 'PII_INDEX_KEY', 'SESSION_SECRET'])(
+    '%s es obligatorio y de al menos 32 caracteres',
+    (name) => {
+      expect(() => readApiConfig(input({ [name]: undefined }))).toThrow(name);
+      expect(() => readApiConfig(input({ [name]: 'corto' }))).toThrow(name);
+    },
+  );
+
+  it('los valores de prueba de .env.example solo valen en local', () => {
+    expect(readApiConfig(input()).piiIndexKey).toMatch(/^solo_pruebas_locales/);
+    expect(() => readApiConfig(input({ APP_ENV: 'staging' }))).toThrow('PII_KEY_1');
+    const real = 'k'.repeat(40);
+    const config = readApiConfig(
+      input({ APP_ENV: 'staging', PII_KEY_1: real, PII_INDEX_KEY: real, SESSION_SECRET: real }),
+    );
+    expect(config.hibpEnabled).toBe(false);
+  });
+
+  it('HIBP_ENABLED solo acepta true o false', () => {
+    expect(() => readApiConfig(input({ HIBP_ENABLED: 'si' }))).toThrow('HIBP_ENABLED');
+  });
+});
+
 describe('explicit environment configuration', () => {
   it('loads all three services from the versioned example without ambient mutation', () => {
     const previous = process.env['API_PORT'];
