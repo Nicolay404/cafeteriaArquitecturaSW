@@ -29,41 +29,120 @@ cafeteriaArquitecturaSW/              raíz Git y agentes
 
 Árbol de fuentes y configuración: omite archivos ignorados. Las dependencias/cachés anteriores se conservaron en sus ubicaciones originales; pueden quedar directorios `apps/` o `packages/` antiguos que contienen exclusivamente archivos generados ignorados. No forman otro workspace. No se trasladaron `node_modules`, `.turbo` ni archivos `.env` privados; una instalación nueva crea dependencias ignoradas dentro de `proyecto/`.
 
-## Verificaciones disponibles
+## Arranque local (T001–T020)
 
-Node **24.22.1**, pnpm **12.21.0** fijados; Corepack disponible. Desde raíz Git, en PowerShell:
+Requisitos: Git, Docker Desktop con el motor Linux iniciado, y Node **24.22.1** con pnpm **12.21.0** (ambos fijados; pnpm llega por Corepack, sin instalación global). Rama del Spec #1: `feature/spec-1`. Todos los comandos, en PowerShell y desde `proyecto/`; en Linux usar `corepack` en vez de `corepack.cmd`.
+
+### 1. Instalar y comprobar
 
 ```powershell
 git branch --show-current
 Set-Location proyecto
-node --version
-corepack.cmd pnpm install --frozen-lockfile --ignore-scripts
+corepack.cmd pnpm install --frozen-lockfile
 corepack.cmd pnpm typecheck
-corepack.cmd pnpm lint
-corepack.cmd pnpm format:check
-corepack.cmd pnpm test:config
-node --env-file=.env.example --import tsx scripts/env-check.ts
 ```
 
-La rama activa autorizada del Spec #1 es `feature/spec-1-continuacion` (PR #2). `--frozen-lockfile` comprueba el lockfile existente; no regenerarlo para ocultar problemas de traslado. No se afirma instalación totalmente offline: pnpm puede necesitar metadatos de sus políticas de dependencias. La instalación indicada no ejecuta scripts lifecycle de dependencias. En Linux usar `corepack` en lugar de `corepack.cmd`.
-
-Si pnpm no está en PATH, Turbo necesita un shim aunque el comando inicial use Corepack. Se puede habilitar **solo para esa terminal**, sin modificar instalación global ni política de PowerShell:
+Si `pnpm` no está en el PATH, Turbo (que usan `typecheck` y `build`) necesita un shim. Se habilita **solo para esa terminal**, sin tocar la instalación global ni la política de PowerShell:
 
 ```powershell
-$taskShims = Join-Path $env:TEMP 'cafeteria-corepack-shims'
-New-Item -ItemType Directory -Force -Path $taskShims
-corepack.cmd enable --install-directory $taskShims pnpm
-$env:PATH = $taskShims + [System.IO.Path]::PathSeparator + $env:PATH
-corepack.cmd pnpm typecheck
+$shims = Join-Path $env:TEMP 'cafeteria-corepack-shims'
+New-Item -ItemType Directory -Force -Path $shims
+corepack.cmd enable --install-directory $shims pnpm
+$env:PATH = $shims + [System.IO.Path]::PathSeparator + $env:PATH
 ```
 
-API/worker y el validador leen `proyecto/.env` si existe y dan prioridad al entorno del proceso. La web recibe variables del launcher/plataforma en runtime; no carga automáticamente archivos privados dentro del build. El comando con `--env-file=.env.example` prueba valores locales sin crear un archivo privado. Copiar el ejemplo a `.env` dentro del workspace será una elección local; no reutilizar/mover automáticamente secretos que existieran en la raíz.
+`--frozen-lockfile` no debe regenerarse para ocultar problemas. No se usa `--ignore-scripts`: `pnpm-workspace.yaml` ya declara qué dependencias no ejecutan scripts (`allowBuilds`).
 
-T001–T015 están verificadas: Compose local, salud API, worker técnico, inicio básico y proxy runtime. Se ejecutan `corepack.cmd pnpm test:integration` (Docker real) y `corepack.cmd pnpm exec vitest run --config apps/web/vitest.config.ts`. Build web probado con `node apps/web/node_modules/next/dist/bin/next build apps/web` y NODE_ENV=production; sin `--env-file`, porque Next propaga flags incompatibles a sus workers. `corepack.cmd pnpm dev` e `infra:check` cargan .env por defecto; aceptan --env-file .env.example para el ejemplo versionado. Dev coordina web/API/worker y rechaza puertos ocupados; consultar el flujo y override 5432→55432 del quickstart. Build coordinado, E2E y despliegues corresponden a las siguientes tareas. Esto no certifica H0 completo ni aprobación visual. Resultados y guía en [quickstart.md](specs/001-plataforma-entrega/quickstart.md).
+### 2. Entorno
+
+`proyecto/.env.example` trae valores **solo para pruebas locales** (no reutilizar en la nube). Dos opciones:
+
+- Copiarlo: `Copy-Item .env.example .env` (`.env` está ignorado por Git).
+- O pasarlo en cada comando: `--env-file .env.example`.
+
+Sin `.env` y sin `--env-file`, los comandos fallan nombrando la primera variable que falta (por ejemplo `Configuración inválida: NODE_ENV`); nunca imprimen valores. Compose también necesita ese archivo: `--env-file .env` o `.env.example`.
+
+### 3. Infraestructura (Docker Compose)
+
+```powershell
+docker compose --env-file .env.example -f infra/compose.yaml up -d --wait --wait-timeout 150
+corepack.cmd pnpm infra:check --env-file .env.example
+```
+
+Levanta Postgres, Redis, RabbitMQ y Mailpit, todos en `127.0.0.1`. `infra:check` hace un `SELECT` técnico, escribe/lee/borra una clave en Redis, publica y consume un mensaje correlacionado en RabbitMQ y comprueba Mailpit (HTTP y saludo SMTP). Imprime `OK`/`ERROR` por servicio y devuelve **1** si alguno falla, sin mostrar credenciales ni URLs.
+
+| Servicio | Puerto en 127.0.0.1 |
+|---|---|
+| Web (Next.js) | 3000 |
+| API (Nest) | 3001 |
+| Postgres | 5432 (ajustable con `POSTGRES_PORT`) |
+| Redis | 6379 |
+| RabbitMQ | 5672 (AMQP), 15672 (gestión) |
+| Mailpit | 1025 (SMTP), 8025 (interfaz web) |
+
+Si **5432 está ocupado** por otro programa (por ejemplo un Postgres instalado en Windows), no lo detengas: usa otro puerto para Postgres en esa terminal.
+
+```powershell
+$env:POSTGRES_PORT = '55432'
+$env:DATABASE_URL = 'postgresql://cafeteria_local:solo_pruebas_locales@127.0.0.1:55432/cafeteria_local'
+```
+
+El entorno del proceso tiene prioridad sobre el archivo. Comprobar antes qué ocupa un puerto: `Get-NetTCPConnection -State Listen -LocalPort 5432`.
+
+### 4. Aplicación
+
+```powershell
+corepack.cmd pnpm dev --env-file .env.example
+```
+
+`dev` comprueba la infraestructura y arranca web, API y worker. Espera hasta ver `DEV_READY` y entonces:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:3001/health        # API: status ok + version
+Invoke-RestMethod http://127.0.0.1:3000/api/health    # mismo JSON a través de la web
+Start-Process http://127.0.0.1:3000/                  # inicio básico
+```
+
+Detener con **Ctrl+C**. El wrapper `.cmd` de Windows pregunta si terminar el trabajo por lotes (`Terminate batch job (Y/N)?` en Windows en inglés): responde que sí. La salida 1 por interrupción es esperada y no es un fallo del arranque; los tres procesos hijos se cierran y quedan libres los puertos 3000 y 3001.
+
+### 5. Parada y segundo arranque
+
+```powershell
+docker compose --env-file .env.example -f infra/compose.yaml down
+```
+
+`down` **conserva los volúmenes** (datos de Postgres, Redis, RabbitMQ y Mailpit) y el siguiente `up` los recupera. **No añadas `-v`** salvo que quieras borrar a propósito los datos de prueba locales.
+
+### 6. Errores frecuentes
+
+| Síntoma | Causa y salida |
+|---|---|
+| `Configuración inválida: NOMBRE` | Falta o es inválida esa variable. Copiar `.env.example` o usar `--env-file`. Si es `API_PORT`/`WEB_PORT` y el mensaje aparece al arrancar, el puerto está ocupado: liberarlo o cambiarlo. |
+| `infra:check` muestra `ERROR` y sale con 1 | Compose no está levantado, o ese servicio no está sano: `docker compose ... ps`. Si es Postgres con 5432 ocupado, usar el override anterior. |
+| `docker` no responde | Iniciar Docker Desktop (`docker desktop start`) y esperar al motor Linux. |
+| Mailpit marca `ERROR` pero su web responde | El saludo SMTP tardaba por DNS inverso; Compose ya lo desactiva (`MP_SMTP_DISABLE_RDNS`). Recrear el contenedor con `up -d --force-recreate mailpit`. |
+
+Mensajes y comprobaciones reales de esta guía, con fechas y resultados, en [bootstrap-procedure.md](specs/001-plataforma-entrega/evidence/bootstrap-procedure.md).
+
+## Calidad y pruebas
+
+```powershell
+corepack.cmd pnpm lint
+corepack.cmd pnpm format:check
+corepack.cmd pnpm typecheck
+corepack.cmd pnpm test:unit          # Vitest + Jest, con cobertura
+corepack.cmd pnpm test:integration   # Testcontainers: necesita Docker; usa contenedores propios, no Compose
+corepack.cmd pnpm build
+corepack.cmd pnpm exec playwright install chromium   # una sola vez
+$env:E2E_ENV_FILE = '.env.example'; corepack.cmd pnpm test:e2e   # con Compose levantado
+corepack.cmd pnpm coverage:merge     # un único coverage/lcov.info
+```
+
+`test:smoke` apunta a un entorno ya arrancado y exige `SMOKE_WEB_URL` y `SMOKE_API_URL`. Axe sin violaciones **no demuestra WCAG AAA**: faltan lector de pantalla y revisión humana. Un solo test: ver `CLAUDE.md`. Resultados y límites en [quickstart.md](specs/001-plataforma-entrega/quickstart.md).
 
 ## Rutas para automatización futura
 
-Compose local existe en `proyecto/infra/compose.yaml`. Todavía **no existen workflows ni configuración de proveedores**; deberán respetar estas rutas:
+Compose local ya existe (arriba). Todavía **no existen workflows ni configuración de proveedores**; deberán respetar estas rutas:
 
 | Área | Ubicación que deberá usar |
 |---|---|
@@ -74,7 +153,7 @@ Compose local existe en `proyecto/infra/compose.yaml`. Todavía **no existen wor
 | Hooks Git | Futuro `.husky/` en raíz; llamar toolchain de `proyecto/` |
 | Sonar | Base `proyecto/`, propiedades futuras `proyecto/sonar-project.properties` y reportes relativos al workspace |
 | Docker | Contexto `proyecto/`, `.dockerignore` allí; Dockerfiles futuros `proyecto/apps/api/Dockerfile` y `proyecto/apps/worker/Dockerfile` (rutas `apps/...` desde el contexto) |
-| Compose | Futuro `proyecto/infra/compose.yaml`; desde `proyecto/`: `docker compose --env-file .env -f infra/compose.yaml ...` |
+| Compose | Ya existe en `proyecto/infra/compose.yaml`; desde `proyecto/`: `docker compose --env-file .env -f infra/compose.yaml ...` |
 | Render | Blueprint futuro `proyecto/render.yaml`, contexto/Dockerfiles coherentes con la fila anterior |
 | Vercel | Configuración futura `proyecto/vercel.json`, frontend `proyecto/apps/web`, paquetes compartidos del monorepo dentro de `proyecto/` |
 
