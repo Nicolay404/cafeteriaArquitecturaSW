@@ -41,7 +41,7 @@ Rutas relativas a `proyecto/`; `promociones/` = `apps/api/src/modules/promocione
 - [x] T006 [US1] Implementar `calcularCotizacion(solicitud, promociones, instante)` en `promociones/dominio/motor-precios.ts` para porcentaje, con ordenación por ID que garantiza determinismo (LOCAL; R1, R5).
 - [ ] T007 [US1] COORD: acordar el número de migración y crear `infra/migrations/NNN_promotions_schema.sql` (esquema `promotions`, tablas de `data-model.md`, solo aditiva) (LOCAL tras acordar).
 - [ ] T008 [US1] Repositorio `promociones/infraestructura/promociones.repository.ts` (guardar, versión optimista, listar candidatas `activa` con `fin > t`) con test de integración en `tests/integration/promociones.int.spec.ts` sobre Postgres real (LOCAL, requiere Docker; dep. T007).
-- [ ] T009 [US1] `promociones/aplicacion/cotizador.service.ts` que implementa `PromocionesApi.cotizar` (repositorio + motor + reloj inyectable) y lo exporta desde `promociones/index.ts`; test unitario con repositorio en memoria (LOCAL; dep. T006, T008).
+- [x] T009 [US1] `promociones/aplicacion/cotizador.service.ts` que implementa `PromocionesApi.cotizar` (repositorio + motor + reloj inyectable) y lo exporta desde `promociones/index.ts`; test unitario con repositorio en memoria (LOCAL; dep. T006, T008). Hecho con fuente inyectable; la fuente real con Postgres llega con T008.
 - [ ] T010 [US1] BLOQUEADO(2): endpoints `POST/PUT/GET /admin/promociones` y transiciones (`contracts/admin-http.md`) con guard de rol `admin` de Identidad, detrás del flag `promociones.admin`; tests de autorización (cliente y personal → 403).
 - [ ] T011 [US1] BLOQUEADO(3): validar al guardar que los IDs del alcance existen, vía la interfaz pública de Catálogo.
 
