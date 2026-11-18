@@ -130,7 +130,8 @@ describe('contraseñas filtradas', () => {
 });
 
 describe('HibpChecker (k-anonimato)', () => {
-  const sha1 = (text: string) => createHash('sha1').update(text).digest('hex').toUpperCase();
+  // El mismo SHA-1 que exige el protocolo de HIBP, para construir la respuesta esperada.
+  const sha1 = (text: string) => createHash('sha1').update(text).digest('hex').toUpperCase(); // NOSONAR
   const password = 'cafe con leche y pan tostado';
   const digest = sha1(password);
   const prefix = digest.slice(0, 5);

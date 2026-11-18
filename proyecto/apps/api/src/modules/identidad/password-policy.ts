@@ -208,7 +208,9 @@ export class HibpChecker implements BreachChecker {
   }
 
   async isBreached(password: string): Promise<boolean> {
-    const digest = createHash('sha1').update(password).digest('hex').toUpperCase();
+    // SHA-1 lo exige el protocolo de rangos de HIBP: no es un hash para GUARDAR contraseñas (esas
+    // van con Argon2id) ni sale entero del proceso; solo viajan sus 5 primeros caracteres.
+    const digest = createHash('sha1').update(password).digest('hex').toUpperCase(); // NOSONAR
     const prefix = digest.slice(0, 5);
     const suffix = digest.slice(5);
     const controller = new AbortController();
