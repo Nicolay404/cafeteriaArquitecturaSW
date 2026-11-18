@@ -8,6 +8,9 @@ export interface Candidate {
   readonly sha: string;
   readonly digestApi: string;
   readonly digestWorker: string;
+  /** Imagen de la web (para promoverla por digest en un entorno local). */
+  readonly digestWeb: string;
+  /** Hash de lo COMPILADO de la web, independiente de la imagen. */
   readonly hashWeb: string;
   readonly migrationChecksums: Readonly<Record<string, string>>;
   readonly configRevision: string;
@@ -18,6 +21,7 @@ const FIELDS = [
   'sha',
   'digestApi',
   'digestWorker',
+  'digestWeb',
   'hashWeb',
   'migrationChecksums',
   'configRevision',
@@ -83,6 +87,7 @@ export function parseCandidate(input: unknown): Candidate {
     sha: input['sha'],
     digestApi: digest(input['digestApi'], 'digestApi'),
     digestWorker: digest(input['digestWorker'], 'digestWorker'),
+    digestWeb: digest(input['digestWeb'], 'digestWeb'),
     hashWeb: digest(input['hashWeb'], 'hashWeb'),
     migrationChecksums: Object.freeze(migrationChecksums),
     configRevision: noSecret(revision, 'configRevision'),
@@ -103,6 +108,7 @@ export function candidateId(candidate: Candidate): string {
     sha: candidate.sha,
     digestApi: candidate.digestApi,
     digestWorker: candidate.digestWorker,
+    digestWeb: candidate.digestWeb,
     hashWeb: candidate.hashWeb,
     migrationChecksums: Object.fromEntries(
       Object.entries(candidate.migrationChecksums).sort(([a], [b]) => a.localeCompare(b, 'en')),

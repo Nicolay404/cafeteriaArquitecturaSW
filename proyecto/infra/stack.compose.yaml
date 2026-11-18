@@ -1,0 +1,95 @@
+# Entorno completo de un candidato, EN LOCAL: infraestructura propia más las tres imágenes que se
+# promueven (API, worker y web). Un entorno por nombre de proyecto de Compose:
+#   docker compose -p cafeteria-staging    -f infra/stack.compose.yaml ...
+#   docker compose -p cafeteria-production -f infra/stack.compose.yaml ...
+# Los datos de cada entorno viven en volúmenes propios y NO se borran al actualizar los servicios.
+# Es un ensayo local de promoción y rollback: no sustituye a una plataforma real (alcance-local.md).
+# Solo loopback. Las credenciales son las de pruebas locales de .env.example: nunca usarlas fuera.
+services:
+  postgres:
+    image: postgres:17.12-bookworm@sha256:40865bc877a289da75963d97d72b59633f639fc5af7a4e856bfa3714cae5b536
+    environment:
+      POSTGRES_DB: cafeteria_local
+      POSTGRES_USER: cafeteria_local
+      POSTGRES_PASSWORD: solo_pruebas_locales
+    ports:
+      - '127.0.0.1:${POSTGRES_HOST_PORT:?POSTGRES_HOST_PORT requerida}:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 3s
+      timeout: 3s
+      retries: 30
+      start_period: 5s
+
+  redis:
+    image: redis:8.8.4-alpine@sha256:1273af45b299d2b8b60d0e400d90aa6c2c5b1794f01d6a7ca60ff3ba6e65efb5
+    command: ['redis-server', '--appendonly', 'yes']
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  rabbitmq:
+    image: rabbitmq:4.4.0-management-alpine@sha256:4841f6384ef8313c3594cd3f2e9f40c10805f8a61c45f08a9a5d9ddea8199267
+    hostname: cafeteria-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: cafeteria_local
+      RABBITMQ_DEFAULT_PASS: solo_pruebas_locales
+      RABBITMQ_DEFAULT_VHOST: cafeteria_local
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ['CMD', 'rabbitmq-diagnostics', '-q', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 15s
+
+  api:
+    image: ${API_IMAGE:?API_IMAGE requerida}
+    environment: &app-environment
+      NODE_ENV: production
+      APP_ENV: ${APP_ENV:?APP_ENV requerida}
+      APP_VERSION: ${APP_VERSION:?APP_VERSION requerida}
+      API_PORT: '3001'
+      WEB_PORT: '3000'
+      API_BASE_URL: http://api:3001
+      WEB_ORIGIN: http://127.0.0.1:${WEB_HOST_PORT:?WEB_HOST_PORT requerida}
+      DATABASE_URL: postgresql://cafeteria_local:solo_pruebas_locales@postgres:5432/cafeteria_local
+      REDIS_URL: redis://redis:6379
+      RABBITMQ_URL: amqp://cafeteria_local:solo_pruebas_locales@rabbitmq:5672/cafeteria_local
+      SMTP_HOST: 127.0.0.1
+      SMTP_PORT: '1025'
+      FEATURE_FLAGS_PREFIX: cafeteria:${APP_ENV}:flags
+      METRICS_EXPORT_ENABLED: 'false'
+    ports:
+      - '127.0.0.1:${API_HOST_PORT:?API_HOST_PORT requerida}:3001'
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+
+  worker:
+    image: ${WORKER_IMAGE:?WORKER_IMAGE requerida}
+    environment: *app-environment
+    depends_on:
+      redis: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+
+  web:
+    image: ${WEB_IMAGE:?WEB_IMAGE requerida}
+    environment: *app-environment
+    ports:
+      - '127.0.0.1:${WEB_HOST_PORT}:3000'
+    depends_on:
+      api: { condition: service_healthy }
+
+volumes:
+  postgres-data:
+  redis-data:
+  rabbitmq-data:

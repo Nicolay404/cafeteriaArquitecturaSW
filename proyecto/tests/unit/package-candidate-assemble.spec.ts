@@ -94,6 +94,7 @@ describe('packageCandidate', () => {
     expect(candidate.sha).toBe(sha);
     expect(candidate.digestApi).toBe(`sha256:${'1'.repeat(64)}`);
     expect(candidate.digestWorker).toBe(`sha256:${'2'.repeat(64)}`);
+    expect(candidate.digestWeb).toBe(`sha256:${'3'.repeat(64)}`);
     expect(candidate.hashWeb).toMatch(/^sha256:[0-9a-f]{64}$/);
     expect(candidate.migrationChecksums['001']).toMatch(/^[0-9a-f]{64}$/);
     expect(candidate.configRevision).toBe('rev-local-1');
