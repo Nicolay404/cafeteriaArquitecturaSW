@@ -8,12 +8,12 @@ import { ConfigurationError, loadEnvironment, required } from '../../packages/co
 import type { Environment } from '../../packages/config/src/env.js';
 import { isMain, safeError } from '../local-environment.js';
 
-// ConstituciÃ³n VII: las migraciones siguen expand/contract y son compatibles con la versiÃ³n
-// anterior (Nâˆ’1). Este runner solo AVANZA: aplica archivos NNN_descripcion.sql en orden, cada
-// uno en una transacciÃ³n, con un bloqueo para que dos ejecuciones no se pisen y con el checksum
-// de cada archivo. Una migraciÃ³n aplicada no se edita, no se borra ni se revierte: se corrige
-// con una migraciÃ³n nueva (compensaciÃ³n). Si una falla, se deshace entera y las anteriores
-// siguen aplicadas, de modo que la versiÃ³n Nâˆ’1 sigue atendiendo.
+// Constitución VII: las migraciones siguen expand/contract y son compatibles con la versión
+// anterior (N−1). Este runner solo AVANZA: aplica archivos NNN_descripcion.sql en orden, cada
+// uno en una transacción, con un bloqueo para que dos ejecuciones no se pisen y con el checksum
+// de cada archivo. Una migración aplicada no se edita, no se borra ni se revierte: se corrige
+// con una migración nueva (compensación). Si una falla, se deshace entera y las anteriores
+// siguen aplicadas, de modo que la versión N−1 sigue atendiendo.
 
 /** Clave del bloqueo consultivo de Postgres; constante para que todas las ejecuciones compitan por el mismo. */
 export const lockKey = 7_201_100_001;
@@ -34,9 +34,7 @@ export function loadMigrations(directory: string): Migration[] {
     .map((file): Migration => {
       const match = FILE_NAME.exec(file);
       if (!match)
-        throw new Error(
-          `Nombre de migraciÃ³n invÃ¡lido: Â«${file}Â» (se espera NNN_descripcion.sql)`,
-        );
+        throw new Error(`Nombre de migración inválido: «${file}» (se espera NNN_descripcion.sql)`);
       const content = readFileSync(join(directory, file));
       return {
         version: match[1]!,
@@ -48,7 +46,7 @@ export function loadMigrations(directory: string): Migration[] {
   const seen = new Set<string>();
   for (const migration of migrations) {
     if (seen.has(migration.version))
-      throw new Error(`VersiÃ³n de migraciÃ³n duplicada: ${migration.version}`);
+      throw new Error(`Versión de migración duplicada: ${migration.version}`);
     seen.add(migration.version);
   }
   return migrations;
@@ -62,7 +60,7 @@ async function acquireLock(client: Client, timeoutMs: number) {
       [lockKey],
     );
     if (rows[0]?.locked) return;
-    if (Date.now() >= deadline) throw new Error('Hay otra migraciÃ³n en curso; no se aplicÃ³ nada');
+    if (Date.now() >= deadline) throw new Error('Hay otra migración en curso; no se aplicó nada');
     await delay(100);
   }
 }
@@ -104,7 +102,7 @@ export async function migrate(options: {
       for (const version of recorded.keys())
         if (!onDisk.has(version))
           throw new Error(
-            `La migraciÃ³n ${version} ya estÃ¡ aplicada pero no estÃ¡ en el repositorio`,
+            `La migración ${version} ya está aplicada pero no está en el repositorio`,
           );
 
       const result: MigrateResult = { applied: [], alreadyApplied: [] };
@@ -113,7 +111,7 @@ export async function migrate(options: {
         if (checksum !== undefined) {
           if (checksum !== migration.checksum)
             throw new Error(
-              `La migraciÃ³n ${migration.version} ya estÃ¡ aplicada y su checksum cambiÃ³: no se edita, se corrige con una migraciÃ³n nueva`,
+              `La migración ${migration.version} ya está aplicada y su checksum cambió: no se edita, se corrige con una migración nueva`,
             );
           result.alreadyApplied.push(migration.version);
           continue;
@@ -129,7 +127,7 @@ export async function migrate(options: {
         } catch (error) {
           await client.query('ROLLBACK').catch(() => undefined);
           throw new Error(
-            `La migraciÃ³n ${migration.version} (${migration.name}) fallÃ³ y se revirtiÃ³ completa: ${
+            `La migración ${migration.version} (${migration.name}) falló y se revirtió completa: ${
               error instanceof Error ? error.message : 'error desconocido'
             }`,
           );
@@ -147,7 +145,7 @@ export async function migrate(options: {
 
 const LOCAL_HOSTS = ['localhost', '127.0.0.1', '[::1]'];
 
-/** Solo local por ahora: staging y producciÃ³n llegan con la identidad de pipeline (T055). */
+/** Solo local por ahora: staging y producción llegan con la identidad de pipeline (T055). */
 export function authorizeMigration(environment: Environment) {
   if (environment['APP_ENV'] !== 'local')
     throw new Error(
