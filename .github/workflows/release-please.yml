@@ -1,0 +1,27 @@
+name: Versionado
+
+# release-please lee los Conventional Commits de main y mantiene un PR de versión (SemVer y
+# CHANGELOG). El PR de versión se revisa y se fusiona como cualquier otro; las etiquetas las crea
+# GitHub al fusionarlo, nunca una máquina personal. No despliega nada (alcance-local.md).
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: release-please
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
