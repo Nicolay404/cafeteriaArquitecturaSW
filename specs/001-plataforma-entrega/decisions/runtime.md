@@ -13,7 +13,7 @@
 | Turbo | 2.11.11 | Orquestación monorepo |
 | ESLint / typescript-eslint / boundaries | 10.15.0 / 8.73.0 / 7.4.4 | Tipos y límites entre módulos |
 | Prettier / tsx / Vitest | 3.10.1 / 4.23.15 / 5.1.0 | Formato, ejecutar scripts TS y pruebas de configuración |
-| @vitest/coverage-v8 / @playwright/test | 5.1.0 / 1.64.1 | Cobertura LCOV de Vitest (peer exacto) y E2E/smoke (T016); 1.64.1 tiene más de un mes publicada |
+| @vitest/coverage-v8 / @playwright/test / @axe-core/playwright | 5.1.0 / 1.64.1 / 4.14.0 | Cobertura LCOV de Vitest (peer exacto), E2E/smoke (T016) y axe (T018); versiones con más de un mes de publicación |
 | @types/node / @types/react / @types/react-dom | 24.10.1 / 19.3.0 / 19.3.0 | Tipos de la línea runtime/UI usada |
 
 Metadatos engines/peers consultados con npm.cmd view. Instalación inicial sin scripts de ciclo de vida; imports reales de next/react/react-dom/server/Nest/TypeScript/lint/Vitest pasaron. tsc/eslint/prettier/turbo devolvieron las versiones fijadas. Instalación congelada con registro pasó; offline falló por metadatos de política de dependencias no cacheados. No desactivar políticas para forzar offline. pnpm generó excepciones explícitas minimumReleaseAgeExclude para las versiones directas seleccionadas y sus paquetes internos; no deshabilitar globalmente esa política.
