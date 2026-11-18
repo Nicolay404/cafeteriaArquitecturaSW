@@ -19,6 +19,10 @@ describe('release-please', () => {
     expect(Object.keys(config.packages)).toEqual(['proyecto']);
   });
 
+  it('el primer release es 0.1.0 (en desarrollo), no 1.0.0 (API estable)', () => {
+    expect((config as unknown as Record<string, unknown>)['initial-version']).toBe('0.1.0');
+  });
+
   it('el manifiesto coincide con la versión actual del paquete', () => {
     const pkg = JSON.parse(read('proyecto/package.json')) as { version: string };
     expect(manifest['proyecto']).toBe(pkg.version);
