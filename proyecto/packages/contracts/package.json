@@ -6,7 +6,10 @@
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
-  "exports": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./cuenta": "./src/cuenta.ts"
+  },
   "dependencies": {
     "zod": "4.6.7"
   }
