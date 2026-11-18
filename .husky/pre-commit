@@ -1,9 +1,10 @@
 #!/bin/sh
 # Revisa solo los archivos en el índice: formato (Prettier) y lint (ESLint, con las fronteras
-# entre módulos). Tipos, build y pruebas los comprueba el pipeline commit a commit.
+# entre módulos). No modifica archivos ni guarda stash (--no-stash): el árbol de trabajo de
+# quien commitea no se toca. Tipos, build y pruebas los comprueba el pipeline commit a commit.
 tool="proyecto/node_modules/lint-staged/bin/lint-staged.js"
 if [ ! -f "$tool" ]; then
   echo "husky: faltan las dependencias. Ejecuta 'pnpm install' dentro de proyecto/ (ver README)." >&2
   exit 1
 fi
-exec node "$tool" --config lint-staged.config.mjs
+exec node "$tool" --no-stash --config lint-staged.config.mjs
