@@ -235,6 +235,25 @@ test.describe('US1 — pantallas de cuenta', () => {
     await expect(checkbox).not.toHaveCSS('outline-width', '0px');
   });
 
+  test('la casilla de la política no aplasta su etiqueta (en escritorio y en 320 px)', async ({
+    page,
+  }) => {
+    for (const width of [1280, 320]) {
+      await page.setViewportSize({ width, height: 800 });
+      await page.goto('/registro');
+      const box = await page.getByLabel(/Acepto la política/).boundingBox();
+      const label = await page.locator('label[for="aceptaPolitica"]').boundingBox();
+      expect(box?.width ?? 0).toBeLessThanOrEqual(36);
+      expect(label?.width ?? 0).toBeGreaterThan(width === 320 ? 180 : 300);
+      // Un texto de tres líneas, no de decenas: la etiqueta no se parte letra por letra.
+      expect(label?.height ?? 0).toBeLessThan(width === 320 ? 220 : 130);
+      const overflow = (await page.evaluate(
+        'document.documentElement.scrollWidth - document.documentElement.clientWidth',
+      )) as number;
+      expect(overflow).toBeLessThanOrEqual(0);
+    }
+  });
+
   test('con movimiento reducido todo queda quieto y visible', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.goto('/acceso');
