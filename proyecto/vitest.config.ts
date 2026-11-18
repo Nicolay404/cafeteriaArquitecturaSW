@@ -13,7 +13,7 @@ export default defineConfig({
       provider: 'v8',
       include: [
         'apps/web/src/**/*.{ts,tsx}',
-        'packages/*/src/**/*.ts',
+        'packages/*/src/**/*.{ts,tsx}',
         'scripts/**/*.ts',
         'apps/api/src/platform/config.ts',
         'apps/worker/src/config.ts',
