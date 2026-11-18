@@ -38,6 +38,9 @@ const esEntero = (n: number, minimo: number, maximo = Number.MAX_SAFE_INTEGER): 
 
 const fechaValida = (fecha: Date): boolean => !Number.isNaN(fecha.getTime());
 
+/** Forma canónica de un código de cupón: sin espacios y en mayúsculas. */
+export const normalizarCupon = (codigo: string): string => codigo.replace(/\s+/g, '').toUpperCase();
+
 function erroresDelValor(valor: ValorPromocion): string | undefined {
   switch (valor.tipo) {
     case 'porcentaje':
@@ -111,7 +114,7 @@ export function validarPromocion(b: BorradorPromocion): ResultadoValidacion {
 
   let cupon: Cupon | undefined;
   if (b.cupon) {
-    const codigo = b.cupon.codigo.replace(/\s+/g, '').toUpperCase();
+    const codigo = normalizarCupon(b.cupon.codigo);
     if (!CODIGO_CUPON.test(codigo))
       error('cupon.codigo', 'El código de cupón debe tener de 4 a 32 letras, números o guiones.');
     const limite = b.cupon.limiteUsos;

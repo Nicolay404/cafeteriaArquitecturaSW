@@ -37,8 +37,8 @@ Rutas relativas a `proyecto/`; `promociones/` = `apps/api/src/modules/promocione
 **Goal**: una promoción porcentual con ventana se aplica solo dentro de ella.
 **Independent Test**: cotizar el mismo carrito antes, dentro y después de la ventana.
 
-- [ ] T005 [US1] TDD del motor en `promociones/dominio/motor-precios.spec.ts`: promoción porcentual por producto, categoría o menú; fuera de ventana, pausada o archivada no aplica; la cotización trae precio original, descuento, total y nombre de la promoción (US1.1–3, US1.5, US2.1) (LOCAL).
-- [ ] T006 [US1] Implementar `calcularCotizacion(solicitud, promociones, instante)` en `promociones/dominio/motor-precios.ts` para porcentaje, con ordenación por ID que garantiza determinismo (LOCAL; R1, R5).
+- [x] T005 [US1] TDD del motor en `promociones/dominio/motor-precios.spec.ts`: promoción porcentual por producto, categoría o menú; fuera de ventana, pausada o archivada no aplica; la cotización trae precio original, descuento, total y nombre de la promoción (US1.1–3, US1.5, US2.1) (LOCAL).
+- [x] T006 [US1] Implementar `calcularCotizacion(solicitud, promociones, instante)` en `promociones/dominio/motor-precios.ts` para porcentaje, con ordenación por ID que garantiza determinismo (LOCAL; R1, R5).
 - [ ] T007 [US1] COORD: acordar el número de migración y crear `infra/migrations/NNN_promotions_schema.sql` (esquema `promotions`, tablas de `data-model.md`, solo aditiva) (LOCAL tras acordar).
 - [ ] T008 [US1] Repositorio `promociones/infraestructura/promociones.repository.ts` (guardar, versión optimista, listar candidatas `activa` con `fin > t`) con test de integración en `tests/integration/promociones.int.spec.ts` sobre Postgres real (LOCAL, requiere Docker; dep. T007).
 - [ ] T009 [US1] `promociones/aplicacion/cotizador.service.ts` que implementa `PromocionesApi.cotizar` (repositorio + motor + reloj inyectable) y lo exporta desde `promociones/index.ts`; test unitario con repositorio en memoria (LOCAL; dep. T006, T008).
