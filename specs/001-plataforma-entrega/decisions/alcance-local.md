@@ -4,7 +4,7 @@
 
 ## Decisión
 
-Todo el Spec #1 se desarrolla y verifica **en local con Docker**. No se contratan servicios de pago ni se despliega a la nube por ahora.
+Todo el Spec #1 se desarrolla y verifica **en local con Docker**. **No se usan Vercel ni Render** (decisión del líder del 2026-11-18, que amplía la primera, que solo excluía Render): el frontend también se ejecuta en local (`pnpm dev` y `next start`). Se mantienen GitHub (Actions, rulesets, CodeQL) y SonarQube Cloud, gratuitos para un repositorio público.
 
 ## Motivo
 
@@ -18,7 +18,7 @@ Compose con Postgres, Redis, RabbitMQ y Mailpit; flags y migraciones; Dockerfile
 
 | Requisito | Por qué no se puede demostrar en local |
 |---|---|
-| FR-012: Vercel promueve el mismo paquete sin reconstruir | Es una propiedad de la plataforma Vercel |
+| FR-012: Vercel promueve el mismo paquete sin reconstruir | Es una propiedad de la plataforma Vercel, que no se usa |
 | FR-009/FR-013, SC-004: preview por PR y staging en menos de 20 minutos | Dependen de Vercel y Render |
 | SC-005/SC-006: rollback en menos de 5 minutos y sin interrupción | Dependen del plan y la capacidad de Render |
 | FR-010/FR-011: secretos por entorno y permisos de la plataforma | Dependen de los paneles de Vercel y Render |

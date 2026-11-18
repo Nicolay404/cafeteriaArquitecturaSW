@@ -57,11 +57,11 @@ Objetivo: cada commit válido/verde, merge bloqueado al fallar. Prueba independi
 
 ### Accesos y prueba externa
 
-- [ ] T029 [US1] Confirmar A1 y documentar acceso efectivo Actions/GHCR/rulesets/environments en `specs/001-plataforma-entrega/evidence/github-access.md`, con protección propuesta en `specs/001-plataforma-entrega/decisions/github-controls.md`; no exigir checks inexistentes todavía (EXT A1; dep. T028).
-- [ ] T030 [US1] Conectar Sonar/aplicar gate/check y complemento por módulo si hace falta; guardar referencias de credenciales/decoración/umbrales/negativa por caída en `specs/001-plataforma-entrega/evidence/sonar-gate.md` (EXT A1+A2; dep. T029; CA US1.3).
+- [X] T029 [US1] Confirmar A1 y documentar acceso efectivo Actions/GHCR/rulesets/environments en `specs/001-plataforma-entrega/evidence/github-access.md`, con protección propuesta en `specs/001-plataforma-entrega/decisions/github-controls.md`; no exigir checks inexistentes todavía (EXT A1; dep. T028).
+- [X] T030 [US1] Conectar Sonar/aplicar gate/check y complemento por módulo si hace falta; guardar referencias de credenciales/decoración/umbrales/negativa por caída en `specs/001-plataforma-entrega/evidence/sonar-gate.md` (EXT A1+A2; dep. T029; CA US1.3).
 - [ ] T031 [US1] Ejecutar PRs de ensayo positivo/negativos y escaneos reales/aviso local/commit intermedio fallido; evidenciar CA US1.1–5 en `specs/001-plataforma-entrega/evidence/us1-controls.md`, sin integrar fixtures defectuosos (EXT A1+A2; dep. T030).
 - [ ] T032 [US1] Medir controles propios US1 para PR ≤10 commits, optimizar cache sin perder comprobación por commit y registrar tiempo parcial/presupuesto restante en `specs/001-plataforma-entrega/evidence/ci-timing.md`; SC-001 completo espera T048 (EXT A1+A2; dep. T031).
-- [ ] T033 [US1] Aplicar protección main en `Nicolay404/cafeteriaArquitecturaSW`: PR/≥1 aprobación/rebase/historial lineal/commits individuales/sin push directo o bypass ordinario/aprobación invalidada por cambio; probar rechazo en `specs/001-plataforma-entrega/evidence/main-protection.md` (EXT A1; dep. T031; FR-003).
+- [X] T033 [US1] Aplicar protección main en `Nicolay404/cafeteriaArquitecturaSW`: PR/≥1 aprobación/rebase/historial lineal/commits individuales/sin push directo o bypass ordinario/aprobación invalidada por cambio; probar rechazo en `specs/001-plataforma-entrega/evidence/main-protection.md` (EXT A1; dep. T031; FR-003).
 - [ ] T034 [US1] Auditar controles propios/check agregado/documentación pura/fallo intermitente en `specs/001-plataforma-entrega/evidence/us1-acceptance.md`, sin éxito por check omitido; preview/E2E quedan pendientes hasta T047–048 (EXT A1+A2; dep. T032, T033).
 
 ## Fase 4 — US2: Preview y staging verificables (P1)
@@ -297,3 +297,7 @@ Commits: commitlint con alcance obligatorio y hooks de Husky (T023/T025); verifi
 ## T050–T054 — 2026-11-18 (reversibilidad local)
 
 Flags técnicos en Redis con lectura en runtime y valor seguro apagado, escritura solo por `flags:set` y solo en local (14 pruebas con Redis real); runner de migraciones expandir/contraer con checksum, bloqueo, fallo sin efectos parciales y compensación (8 pruebas con Postgres real); `verify-revert` y la decisión [reversibility.md](decisions/reversibility.md) (6 pruebas y dos reverts reales OK). Evidencia: [evidence/t050-t054-reversibilidad-local.md](evidence/t050-t054-reversibilidad-local.md). **No hay nube:** staging y producción, la identidad de pipeline y el revert al azar en CI (T055, T056) siguen pendientes y no evaluables sin Vercel y Render.
+
+## T029, T030 y T033 — 2026-11-18 (GitHub y Sonar)
+
+**T033:** ruleset «Proteger main» activo (PR con 1 aprobación, checks «Calidad del PR» y «Seguridad», solo rebase, historial lineal, sin borrado ni force push; excepción de administrador solo vía PR). Probado con rechazo real de un push directo, un force push y un borrado en una rama desechable con regla idéntica. **T029:** acceso efectivo documentado; **GHCR no probado** (no hay imágenes todavía). **T030:** proyecto de Sonar conectado y gate verificado con los umbrales de la constitución; cobertura por módulo pendiente de que existan esos módulos. Alcance ampliado: **sin Vercel ni Render**, todo local. Evidencia: [main-protection.md](evidence/main-protection.md), [github-access.md](evidence/github-access.md), [sonar-gate.md](evidence/sonar-gate.md); decisión: [github-controls.md](decisions/github-controls.md). **T031, T032 y T034 siguen pendientes:** los PR de ensayo necesitan autorización para publicarse en el repositorio público.
