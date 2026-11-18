@@ -1,6 +1,6 @@
 # Verificación desde clon limpio — Spec #1
 
-**Estado:** T001–T020 verificadas bajo `proyecto/`: configuración, Compose local, API de salud, worker técnico, inicio básico y proxy web runtime. Build web y suites locales probados; ver evidence/t011-health.md, evidence/t012-worker-pending.md y evidence/t013-t014-web.md. El arranque coordinado y infra:check de T015 están disponibles; E2E y cloud del flujo completo siguiente siguen pendientes. No desplegar desde equipos personales ni interpretar la base funcional como diseño final aprobado.
+**Estado:** T001–T021 verificadas bajo `proyecto/`: configuración, Compose local, API de salud, worker técnico, inicio básico y proxy web runtime. Build web y suites locales probados; ver evidence/t011-health.md, evidence/t012-worker-pending.md y evidence/t013-t014-web.md. El arranque coordinado y infra:check de T015 están disponibles; E2E y cloud del flujo completo siguiente siguen pendientes. No desplegar desde equipos personales ni interpretar la base funcional como diseño final aprobado.
 
 ## Prerrequisitos y configuración
 
