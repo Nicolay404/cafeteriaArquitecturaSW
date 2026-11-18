@@ -2,9 +2,8 @@ import { spawn } from 'node:child_process';
 import { appendFileSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
-import { parseCandidate } from '../../packages/contracts/src/candidate.js';
+import { candidateId, parseCandidate } from '../../packages/contracts/src/candidate.js';
 import type { Candidate } from '../../packages/contracts/src/candidate.js';
-import { candidateId } from '../../packages/contracts/src/candidate.js';
 import type { Deployment } from '../../packages/contracts/src/deployment.js';
 import type { EnvironmentType } from '../../packages/contracts/src/environment.js';
 import { migrationChecksums } from '../ci/package-candidate.js';
@@ -243,8 +242,9 @@ export function createLocalAdapters(options: LocalOptions): Adapters {
       maybeFail('migrate');
       // Las migraciones del repositorio deben ser EXACTAMENTE las que lleva el candidato.
       const directory = options.migrationsDir ?? join(options.root, 'infra/migrations');
-      const actual = JSON.stringify(Object.entries(migrationChecksums(directory)).sort());
-      if (actual !== JSON.stringify(Object.entries(candidate.migrationChecksums).sort()))
+      const byName = ([a]: [string, string], [b]: [string, string]) => a.localeCompare(b, 'en');
+      const actual = JSON.stringify(Object.entries(migrationChecksums(directory)).sort(byName));
+      if (actual !== JSON.stringify(Object.entries(candidate.migrationChecksums).sort(byName)))
         throw new Error('Las migraciones del repositorio no coinciden con las del candidato');
       await up(candidate, ['postgres'], 'La base de datos');
       await migrate({ databaseUrl: DATABASE(settings.postgres), directory, lockTimeoutMs: 20_000 });
