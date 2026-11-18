@@ -30,7 +30,7 @@ export interface Migration {
 export function loadMigrations(directory: string): Migration[] {
   const migrations = readdirSync(directory)
     .filter((file) => file.toLowerCase().endsWith('.sql'))
-    .sort()
+    .sort((a, b) => a.localeCompare(b, 'en'))
     .map((file): Migration => {
       const match = FILE_NAME.exec(file);
       if (!match)

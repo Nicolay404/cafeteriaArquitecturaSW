@@ -86,7 +86,7 @@ export function mergeLcov(reports: string[], root: string): string {
   }
 
   const output: string[] = [];
-  for (const path of [...files.keys()].sort()) {
+  for (const path of [...files.keys()].sort((a, b) => a.localeCompare(b, 'en'))) {
     const coverage = files.get(path)!;
     output.push('TN:', `SF:${path}`);
     const functions = [...coverage.functions].sort((a, b) => a[1].line - b[1].line);
