@@ -1,0 +1,11 @@
+#!/bin/sh
+# Constitución VII: Conventional Commits con el módulo como alcance (feat(pedidos): ...).
+# Solo necesita Node y las dependencias instaladas, no pnpm en el PATH. El pipeline repite
+# esta comprobación (scripts/ci/verify-commits.ts): este hook solo adelanta el error.
+cli="proyecto/node_modules/@commitlint/cli/cli.js"
+if [ ! -f "$cli" ]; then
+  echo "husky: faltan las dependencias. Ejecuta 'pnpm install' dentro de proyecto/ (ver README)." >&2
+  exit 1
+fi
+message="$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
+exec node "$cli" --config proyecto/commitlint.config.cjs --edit "$message"
