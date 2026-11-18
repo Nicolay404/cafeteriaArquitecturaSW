@@ -35,3 +35,4 @@ secrets/
 
 # Tipos generados por Next durante dev/build
 next-env.d.ts
+quality-reports/
