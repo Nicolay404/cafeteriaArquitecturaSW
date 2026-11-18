@@ -24,9 +24,9 @@ Rutas relativas a `proyecto/`; `promociones/` = `apps/api/src/modules/promocione
 
 ## Phase 2: Foundational
 
-- [ ] T002 Definir los tipos del contrato en `promociones/dominio/tipos.ts` (`LineaACotizar`, `SolicitudCotizacion`, `Cotizacion`, `PromocionAplicada`, `EstadoCupon`) según `contracts/promociones-api.md`, y los tipos de dominio `Promocion` según `data-model.md` (LOCAL).
-- [ ] T003 TDD de `promociones/dominio/vigencia.ts` en `vigencia.spec.ts`: ventana `[inicio, fin)` (justo antes, en el inicio, justo antes del fin, en el fin), conversión hora local `America/Guayaquil` ↔ UTC con `Intl` y zona configurable (LOCAL; R4).
-- [ ] T004 TDD de la validación de `Promocion` en `promociones/dominio/promocion.ts` / `promocion.spec.ts`: fin > inicio, alcance no vacío, nombre, valores por tipo, cupón, prioridad, monto mínimo; errores por campo con mensaje que indica cómo corregir (LOCAL; US1.4, FR-001/002/003/006/007).
+- [x] T002 Definir los tipos del contrato en `promociones/dominio/tipos.ts` (`LineaACotizar`, `SolicitudCotizacion`, `Cotizacion`, `PromocionAplicada`, `EstadoCupon`) según `contracts/promociones-api.md`, y los tipos de dominio `Promocion` según `data-model.md` (LOCAL).
+- [x] T003 TDD de `promociones/dominio/vigencia.ts` en `vigencia.spec.ts`: ventana `[inicio, fin)` (justo antes, en el inicio, justo antes del fin, en el fin), conversión hora local `America/Guayaquil` ↔ UTC con `Intl` y zona configurable (LOCAL; R4).
+- [x] T004 TDD de la validación de `Promocion` en `promociones/dominio/promocion.ts` / `promocion.spec.ts`: fin > inicio, alcance no vacío, nombre, valores por tipo, cupón, prioridad, monto mínimo; errores por campo con mensaje que indica cómo corregir (LOCAL; US1.4, FR-001/002/003/006/007).
 
 **Checkpoint**: dominio base probado; el motor puede empezar.
 
