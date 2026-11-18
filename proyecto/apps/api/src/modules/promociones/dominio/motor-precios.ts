@@ -13,6 +13,7 @@ import { centavos, descuentoPorcentual, repartirProporcional, type Centavos } fr
 import { normalizarCupon } from './promocion.js';
 import type {
   Cotizacion,
+  EstadoCupon,
   LineaACotizar,
   LineaCotizada,
   Promocion,
@@ -259,6 +260,7 @@ export function calcularCotizacion(
     };
   });
   const descuentoTotal = lineasCotizadas.reduce((s, l) => s + l.descuentoCentavos, 0);
+  const promocionesAplicadas = agregar(registros, () => true);
 
   return {
     instante: instante.toISOString(),
@@ -266,6 +268,36 @@ export function calcularCotizacion(
     subtotalCentavos: subtotal,
     descuentoCentavos: descuentoTotal,
     totalCentavos: subtotal - descuentoTotal,
-    promocionesAplicadas: agregar(registros, () => true),
+    promocionesAplicadas,
+    ...(cupon === undefined
+      ? {}
+      : { cupon: estadoCupon(cupon, promociones, instante, subtotal, promocionesAplicadas) }),
   };
+}
+
+/**
+ * Estado del cupón introducido (contracts/promociones-api.md, «Estados del cupón»). Pausado,
+ * archivado, terminado e inexistente responden igual, `no_valido`, para no revelar códigos.
+ */
+function estadoCupon(
+  codigo: string,
+  promociones: readonly Promocion[],
+  instante: Date,
+  subtotal: Centavos,
+  aplicadas: readonly PromocionAplicada[],
+): EstadoCupon {
+  const promocion = promociones
+    .filter((p) => p.estado === 'activa' && p.cupon?.codigo === codigo)
+    .sort(porId)[0];
+  const t = instante.getTime();
+  if (!promocion || t >= promocion.fin.getTime()) return { estado: 'no_valido' };
+  if (t < promocion.inicio.getTime()) return { estado: 'no_vigente' };
+  const limite = promocion.cupon?.limiteUsos;
+  if (limite !== undefined && promocion.usos >= limite) return { estado: 'agotado' };
+  const minimo = promocion.montoMinimoCentavos;
+  if (minimo !== undefined && subtotal < minimo)
+    return { estado: 'monto_minimo', faltanteCentavos: minimo - subtotal };
+  return aplicadas.some((p) => p.promocionId === promocion.id)
+    ? { estado: 'aplicado', promocionId: promocion.id }
+    : { estado: 'sin_efecto' };
 }

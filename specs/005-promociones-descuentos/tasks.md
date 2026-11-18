@@ -75,7 +75,7 @@ Rutas relativas a `proyecto/`; `promociones/` = `apps/api/src/modules/promocione
 **Goal**: cupón, monto mínimo y límite de usos.
 **Independent Test**: cupón con mínimo y límite, por debajo y por encima del mínimo y tras agotarse.
 
-- [ ] T017 [US4] TDD en el motor: promoción con cupón solo aplica con el código (normalizado), monto mínimo sobre subtotal bruto con `faltanteCentavos`, estados `aplicado`/`monto_minimo`/`agotado`/`no_vigente`/`no_valido` (US4.1–3) (LOCAL; R6).
+- [x] T017 [US4] TDD en el motor: promoción con cupón solo aplica con el código (normalizado), monto mínimo sobre subtotal bruto con `faltanteCentavos`, estados `aplicado`/`monto_minimo`/`agotado`/`no_vigente`/`no_valido`/`sin_efecto` (US4.1–3) (LOCAL; R6).
 - [ ] T018 [US4] `registrarUsos`/`liberarUsos` en el repositorio: incremento atómico `usos < limite`, idempotente por `(promocion_id, pedido_id)`; test de integración con concurrencia (dos pedidos por el último uso → solo uno) (LOCAL, Docker; dep. T008).
 - [ ] T019 [US4] Límite de intentos fallidos de cupón en Redis (`promociones/aplicacion/cupones.service.ts`), por IP de momento; test de integración con Redis real (US4.4, FR-012) (LOCAL, Docker). Sujeto por cliente: BLOQUEADO(2).
 

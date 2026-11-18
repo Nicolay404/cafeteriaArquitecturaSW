@@ -40,7 +40,7 @@ export interface LineaCotizada {
 export type EstadoCupon =
   | { estado: 'aplicado'; promocionId: string }
   | { estado: 'monto_minimo'; faltanteCentavos: number }
-  | { estado: 'agotado' | 'no_vigente' | 'no_valido' };
+  | { estado: 'agotado' | 'no_vigente' | 'no_valido' | 'sin_efecto' };
 
 export interface Cotizacion {
   instante: string;            // ISO-8601 UTC del cálculo
@@ -62,6 +62,19 @@ export interface PromocionesApi {
 
 export type ResultadoUsos = { ok: true } | { ok: false; agotadas: readonly string[] };
 ```
+
+## Estados del cupón
+
+Se evalúan en este orden sobre la promoción activa (no archivada ni pausada) con ese código:
+
+| Estado | Significado | Mensaje sugerido al cliente |
+|---|---|---|
+| `no_valido` | No existe, está pausado o ya terminó (no se distingue, para no revelar códigos) | «Este cupón no es válido.» |
+| `no_vigente` | Existe y está activo, pero su ventana aún no empieza | «Este cupón todavía no está disponible.» |
+| `agotado` | Alcanzó su límite de usos (US4.3) | «Este cupón ya no está disponible.» |
+| `monto_minimo` | El subtotal no llega al mínimo; `faltanteCentavos` dice cuánto falta (US4.2) | «Te faltan $X para usar este cupón.» |
+| `sin_efecto` | Es válido, pero no descuenta nada en este carrito: ningún producto está en su alcance o lo supera otra promoción | «El cupón es válido, pero no mejora el precio de este carrito.» |
+| `aplicado` | Descuenta en la cotización (US4.1) | Muestra el ahorro |
 
 ## Garantías
 

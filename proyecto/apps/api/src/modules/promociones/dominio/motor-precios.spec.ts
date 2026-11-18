@@ -410,3 +410,87 @@ describe('calcularCotizacion — combo (T014, US2.4)', () => {
     ]);
   });
 });
+
+describe('calcularCotizacion — estado del cupón (T017, US4.1-3)', () => {
+  const navidad = promo({ id: 'nav', cupon: { codigo: 'NAVIDAD' } });
+  const estado = (promociones: Promocion[], codigoCupon: string, lineas = [cafe]) =>
+    calcularCotizacion({ lineas, codigoCupon }, promociones, DENTRO).cupon;
+
+  it('sin código no informa estado de cupón', () => {
+    expect('cupon' in calcularCotizacion({ lineas: [cafe] }, [navidad], DENTRO)).toBe(false);
+  });
+
+  it('US4.1: un cupón válido que descuenta queda aplicado (código normalizado)', () => {
+    expect(estado([navidad], ' navidad ')).toEqual({ estado: 'aplicado', promocionId: 'nav' });
+  });
+
+  it.each([
+    ['desconocido', [navidad], 'OTRO'],
+    ['vacío', [navidad], ''],
+    ['de una promoción pausada', [{ ...navidad, estado: 'pausada' as const }], 'NAVIDAD'],
+    ['de una promoción archivada', [{ ...navidad, estado: 'archivada' as const }], 'NAVIDAD'],
+    [
+      'de una promoción terminada',
+      [{ ...navidad, fin: new Date('2026-12-21T00:00:00Z') }],
+      'NAVIDAD',
+    ],
+  ])('un código %s no es válido', (_caso, promociones, codigo) => {
+    expect(estado(promociones, codigo)).toEqual({ estado: 'no_valido' });
+  });
+
+  it('una promoción archivada con el mismo código no oculta a la activa', () => {
+    const vieja = promo({ id: 'a-vieja', estado: 'archivada', cupon: { codigo: 'NAVIDAD' } });
+    expect(estado([vieja, navidad], 'NAVIDAD')).toEqual({ estado: 'aplicado', promocionId: 'nav' });
+  });
+
+  it('un cupón cuya ventana aún no empieza no está vigente', () => {
+    const futura = { ...navidad, inicio: new Date('2026-12-24T00:00:00Z') };
+    expect(estado([futura], 'NAVIDAD')).toEqual({ estado: 'no_vigente' });
+  });
+
+  it('US4.3: un cupón con los usos agotados', () => {
+    const agotado = { ...navidad, cupon: { codigo: 'NAVIDAD', limiteUsos: 3 }, usos: 3 };
+    expect(estado([agotado], 'NAVIDAD')).toEqual({ estado: 'agotado' });
+  });
+
+  it('US4.2: por debajo del monto mínimo indica cuánto falta', () => {
+    const conMinimo = { ...navidad, montoMinimoCentavos: 1000 };
+    expect(estado([conMinimo], 'NAVIDAD')).toEqual({
+      estado: 'monto_minimo',
+      faltanteCentavos: 500,
+    });
+    expect(estado([conMinimo], 'NAVIDAD', [{ ...cafe, cantidad: 4 }])).toEqual({
+      estado: 'aplicado',
+      promocionId: 'nav',
+    });
+  });
+
+  it('agotado se informa antes que el monto mínimo', () => {
+    const ambos = {
+      ...navidad,
+      montoMinimoCentavos: 1000,
+      cupon: { codigo: 'NAVIDAD', limiteUsos: 1 },
+      usos: 1,
+    };
+    expect(estado([ambos], 'NAVIDAD')).toEqual({ estado: 'agotado' });
+  });
+
+  it('válido pero sin productos en su alcance → sin efecto', () => {
+    expect(estado([navidad], 'NAVIDAD', [jugo])).toEqual({ estado: 'sin_efecto' });
+  });
+
+  it('válido pero superado por una promoción de mayor prioridad → sin efecto', () => {
+    const fuerte = promo({
+      id: 'fuerte',
+      prioridad: 5,
+      valor: { tipo: 'porcentaje', puntosBasicos: 5000 },
+    });
+    const c = calcularCotizacion(
+      { lineas: [cafe], codigoCupon: 'NAVIDAD' },
+      [navidad, fuerte],
+      DENTRO,
+    );
+    expect(c.cupon).toEqual({ estado: 'sin_efecto' });
+    expect(c.promocionesAplicadas.map((p) => p.promocionId)).toEqual(['fuerte']);
+  });
+});

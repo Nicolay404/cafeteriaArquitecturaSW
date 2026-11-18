@@ -93,7 +93,7 @@ export interface LineaCotizada {
 export type EstadoCupon =
   | { readonly estado: 'aplicado'; readonly promocionId: string }
   | { readonly estado: 'monto_minimo'; readonly faltanteCentavos: Centavos }
-  | { readonly estado: 'agotado' | 'no_vigente' | 'no_valido' };
+  | { readonly estado: 'agotado' | 'no_vigente' | 'no_valido' | 'sin_efecto' };
 
 export interface Cotizacion {
   /** ISO-8601 UTC del instante del cálculo. */

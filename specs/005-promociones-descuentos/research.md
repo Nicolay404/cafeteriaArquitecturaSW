@@ -48,7 +48,7 @@ Determinista y documentado; el carrito muestra qué promociones se aplicaron.
 
 ## R6. Cupones
 
-- **Decisión**: un cupón es un código compartido (supuesto del spec) asociado a una promoción, normalizado a mayúsculas sin espacios y guardado en claro (no es secreto: es un código de marketing). Un carrito admite un cupón en la v1. La cotización devuelve el estado del cupón: `aplicado`, `no_valido`, `monto_minimo` (con el faltante en centavos), `agotado` o `no_vigente`. `no_valido` no distingue entre inexistente y pausado.
+- **Decisión**: un cupón es un código compartido (supuesto del spec) asociado a una promoción, normalizado a mayúsculas sin espacios y guardado en claro (no es secreto: es un código de marketing). Un carrito admite un cupón en la v1. La cotización devuelve el estado del cupón: `aplicado`, `no_valido`, `monto_minimo` (con el faltante en centavos), `agotado`, `no_vigente` o `sin_efecto` (válido pero sin descuento en ese carrito). `no_valido` no distingue entre inexistente, pausado o terminado; el orden de evaluación está en `contracts/promociones-api.md`.
 - **Usos**: se consumen al confirmar el pedido (spec 006) con `UPDATE … SET usos = usos + 1 WHERE usos < limite`, idempotente por `(promocion_id, pedido_id)`; liberar uso si el pedido se cancela.
 - **Intentos (FR-012)**: contador en Redis por sujeto (cliente cuando Identidad exista; IP hasta entonces) con ventana deslizante: 10 intentos fallidos / 15 min → bloqueo temporal con mensaje claro.
 

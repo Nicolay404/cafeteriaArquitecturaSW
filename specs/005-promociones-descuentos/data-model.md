@@ -37,7 +37,7 @@ estado guardado: es `estado = activa ∧ inicio ≤ t < fin`.
 - **Línea cotizada**: `productoId`, `cantidad`, `precioBaseCentavos` (unitario), `subtotalCentavos`, `descuentoCentavos`, `totalCentavos`, `promociones[]` (`promocionId`, `nombre`, `descuentoCentavos`).
 - **Totales**: `subtotalCentavos`, `descuentoCentavos`, `totalCentavos` (= subtotal − descuento, ≥ 0).
 - **Descuentos aplicados**: por promoción, el importe total y las líneas afectadas (FR-010).
-- **Cupón**: `estado` (`aplicado`, `no_valido`, `monto_minimo`, `agotado`, `no_vigente`) y `faltanteCentavos` cuando aplica.
+- **Cupón**: `estado` (`aplicado`, `no_valido`, `monto_minimo`, `agotado`, `no_vigente`, `sin_efecto`) y `faltanteCentavos` cuando aplica.
 - **Instante** del cálculo, para reproducirlo.
 
 ## Tablas
