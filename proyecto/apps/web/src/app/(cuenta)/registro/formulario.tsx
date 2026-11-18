@@ -27,6 +27,7 @@ export function FormularioRegistro() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [general, setGeneral] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const [sent, setSent] = useState<string | null>(null);
 
   const change = (name: keyof typeof values) => (event: { target: { value: string } }) =>
@@ -34,6 +35,7 @@ export function FormularioRegistro() {
 
   async function submit(event: FormEvent) {
     event.preventDefault();
+    setAttempt((current) => current + 1);
     setGeneral(null);
     const checked = validar(registroRequest, { ...values, aceptaPolitica: acepta });
     if (!checked.ok) return setErrors(checked.campos);
@@ -76,7 +78,7 @@ export function FormularioRegistro() {
     >
       {general ? <StatusMessage kind="error">{general}</StatusMessage> : null}
       <form onSubmit={(event) => void submit(event)} noValidate>
-        <ErrorSummary errors={list} />
+        <ErrorSummary attempt={attempt} errors={list} />
         <Field
           id="nombre"
           name="nombre"

@@ -24,12 +24,14 @@ export function FormularioAcceso() {
   const [general, setGeneral] = useState<{ kind: 'error' | 'ok'; text: string } | null>(null);
   const [needsConfirmation, setNeedsConfirmation] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [attempt, setAttempt] = useState(0);
 
   const change = (name: keyof typeof values) => (event: { target: { value: string } }) =>
     setValues((current) => ({ ...current, [name]: event.target.value }));
 
   async function submit(event: FormEvent) {
     event.preventDefault();
+    setAttempt((current) => current + 1);
     setGeneral(null);
     setNeedsConfirmation(false);
     const checked = validar(accesoRequest, values);
@@ -73,7 +75,7 @@ export function FormularioAcceso() {
         </p>
       ) : null}
       <form onSubmit={(event) => void submit(event)} noValidate>
-        <ErrorSummary errors={list} />
+        <ErrorSummary attempt={attempt} errors={list} />
         <Field
           id="correo"
           name="correo"

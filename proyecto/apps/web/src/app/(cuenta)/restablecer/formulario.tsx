@@ -6,16 +6,18 @@ import { restablecerRequest } from '@cafeteria/contracts/cuenta';
 import { AccountShell, Button, ErrorSummary, PasswordField, StatusMessage } from '@cafeteria/ui';
 import { camposPorNombre, llamar, validar } from '../cliente-api.ts';
 
-export function FormularioRestablecer({ token }: { token: string }) {
+export function FormularioRestablecer({ token }: Readonly<{ token: string }>) {
   const [contrasena, setContrasena] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [general, setGeneral] = useState<string | null>(null);
   const [expired, setExpired] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const [done, setDone] = useState(false);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
+    setAttempt((current) => current + 1);
     setGeneral(null);
     const checked = validar(restablecerRequest, { token, contrasena });
     if (!checked.ok) {
@@ -68,6 +70,7 @@ export function FormularioRestablecer({ token }: { token: string }) {
       {general ? <StatusMessage kind="error">{general}</StatusMessage> : null}
       <form onSubmit={(event) => void submit(event)} noValidate>
         <ErrorSummary
+          attempt={attempt}
           errors={
             errors['contrasena'] ? [{ fieldId: 'contrasena', message: errors['contrasena'] }] : []
           }

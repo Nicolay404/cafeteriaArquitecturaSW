@@ -9,9 +9,9 @@ export const metadata: Metadata = {
 
 export default async function ConfirmarPagina({
   searchParams,
-}: {
+}: Readonly<{
   searchParams: Promise<{ token?: string | string[] }>;
-}) {
+}>) {
   const { token } = await searchParams;
   return <Confirmar token={typeof token === 'string' ? token : ''} />;
 }

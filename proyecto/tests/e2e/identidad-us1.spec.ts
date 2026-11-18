@@ -118,6 +118,18 @@ test.describe('US1 — pantallas de cuenta', () => {
     await expect(page.getByLabel('Correo electrónico')).toBeFocused();
   });
 
+  test('tras un error se puede escribir para corregirlo sin que el foco salte al resumen', async ({
+    page,
+  }) => {
+    await page.goto('/registro');
+    await page.getByRole('button', { name: 'Crear cuenta' }).click();
+    await expect(page.locator('.resumen-errores')).toBeFocused();
+    await page.getByLabel('Nombre').first().click();
+    await page.keyboard.type('Ana Pérez');
+    await expect(page.getByLabel('Nombre').first()).toHaveValue('Ana Pérez');
+    await expect(page.getByLabel('Nombre').first()).toBeFocused();
+  });
+
   test('se completa solo con teclado: registro y acceso', async ({ page }) => {
     const correo = email();
     await page.goto('/registro');

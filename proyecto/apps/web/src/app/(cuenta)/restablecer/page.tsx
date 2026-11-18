@@ -10,9 +10,9 @@ export const metadata: Metadata = {
 
 export default async function Restablecer({
   searchParams,
-}: {
+}: Readonly<{
   searchParams: Promise<{ token?: string | string[] }>;
-}) {
+}>) {
   const { token } = await searchParams;
   return <FormularioRestablecer token={typeof token === 'string' ? token : ''} />;
 }

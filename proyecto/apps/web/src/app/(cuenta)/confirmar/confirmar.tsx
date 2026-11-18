@@ -8,7 +8,7 @@ import { llamar, validar } from '../cliente-api.ts';
 
 // La confirmación NO se hace al abrir el enlace sino al pulsar el botón: así los antivirus y las
 // vistas previas de los correos, que abren los enlaces solos, no gastan el enlace de un solo uso.
-export function Confirmar({ token }: { token: string }) {
+export function Confirmar({ token }: Readonly<{ token: string }>) {
   const [state, setState] = useState<'idle' | 'busy' | 'ok' | 'bad'>('idle');
   const [message, setMessage] = useState('');
 
@@ -58,10 +58,12 @@ function Reenviar() {
   const [correo, setCorreo] = useState('');
   const [error, setError] = useState<string | undefined>();
   const [busy, setBusy] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const [sent, setSent] = useState(false);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
+    setAttempt((current) => current + 1);
     const checked = validar(correoRequest, { correo });
     if (!checked.ok) return setError(checked.campos['correo']);
     setError(undefined);
@@ -81,7 +83,10 @@ function Reenviar() {
 
   return (
     <form onSubmit={(event) => void submit(event)} noValidate>
-      <ErrorSummary errors={error ? [{ fieldId: 'correo', message: error }] : []} />
+      <ErrorSummary
+        attempt={attempt}
+        errors={error ? [{ fieldId: 'correo', message: error }] : []}
+      />
       <Field
         id="correo"
         name="correo"
