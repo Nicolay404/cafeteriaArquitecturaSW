@@ -1,15 +1,27 @@
-node_modules/
-.pnpm-store/
-.git/
-.next/
-.turbo/
-dist/
-build/
-coverage/
-*.log*
-.env
-.env.*
+# Contexto de construcción de las imágenes (docker build -f apps/<app>/Dockerfile .).
+# Los patrones con **/ aplican a cualquier profundidad: sin eso, los node_modules y los builds de
+# cada app del equipo del desarrollador se copiarían dentro de la imagen y pisarían lo instalado.
+**/node_modules
+.pnpm-store
+.git
+**/.next
+**/.turbo
+**/dist
+**/build
+**/coverage
+**/playwright-report
+**/test-results
+**/*.log*
+**/.env
+**/.env.*
+!**/.env.example
+**/secrets
+**/*.key
+**/*.tsbuildinfo
 Dockerfile*
+**/Dockerfile*
 .dockerignore
-secrets/
-*.key
+# Pruebas, infraestructura local y scripts: no se necesitan para compilar las apps.
+tests
+infra
+scripts
