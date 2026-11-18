@@ -5,6 +5,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import {
   AccountShell,
   Button,
+  Checkbox,
   ErrorSummary,
   Field,
   PasswordField,
@@ -49,6 +50,23 @@ describe('Field', () => {
     const out = html(<Field id="n" name="n" label="Nombre" error="Escribe tu nombre." />);
     expect(out).toContain('⚠');
     expect(out).toMatch(/Error: <\/span>Escribe tu nombre\./);
+  });
+});
+
+describe('Checkbox', () => {
+  it('tiene etiqueta visible enlazada y error propio', () => {
+    const out = html(
+      <Checkbox id="acepto" name="acepto" label="Acepto la política" error="Debes aceptarla." />,
+    );
+    expect(out).toContain('<label for="acepto">Acepto la política</label>');
+    expect(out).toContain('type="checkbox"');
+    expect(out).toContain('aria-invalid="true"');
+    expect(out).toContain('aria-describedby="acepto-error"');
+    expect(out).toContain('Error: ');
+  });
+
+  it('sin error no declara aria-invalid', () => {
+    expect(html(<Checkbox id="a" name="a" label="x" />)).not.toContain('aria-invalid');
   });
 });
 

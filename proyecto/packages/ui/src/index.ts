@@ -1,2 +1,10 @@
-export { AccountShell, Button, ErrorSummary, Field, PasswordField, StatusMessage } from './form.js';
-export type { FieldProps, FormError } from './form.js';
+export {
+  AccountShell,
+  Button,
+  Checkbox,
+  ErrorSummary,
+  Field,
+  PasswordField,
+  StatusMessage,
+} from './form.tsx';
+export type { FieldProps, FormError } from './form.tsx';
