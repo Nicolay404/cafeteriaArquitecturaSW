@@ -38,7 +38,13 @@ describe('T017 — US1 por HTTP con servicios reales', () => {
 
   async function api(
     path: string,
-    init: { method?: string; body?: unknown; cookie?: string; csrf?: string } = {},
+    init: {
+      method?: string;
+      body?: unknown;
+      cookie?: string;
+      csrf?: string;
+      forwardedFor?: string;
+    } = {},
   ) {
     const response = await fetch(`${base}${path}`, {
       method: init.method ?? 'POST',
@@ -47,6 +53,7 @@ describe('T017 — US1 por HTTP con servicios reales', () => {
         'user-agent': fixedUa,
         ...(init.cookie ? { cookie: init.cookie } : {}),
         ...(init.csrf ? { 'x-csrf-token': init.csrf } : {}),
+        ...(init.forwardedFor ? { 'x-forwarded-for': init.forwardedFor } : {}),
       },
       ...(init.body !== undefined ? { body: JSON.stringify(init.body) } : {}),
     });
@@ -359,6 +366,17 @@ describe('T017 — US1 por HTTP con servicios reales', () => {
       await setFlag({ ...flag, enabled: true });
     }
     expect((await register(email())).status).toBe(202);
+  });
+
+  test('detrás de la web, la IP del visitante sale de X-Forwarded-For (solo desde una red privada)', async () => {
+    await api('/api/auth/acceso', {
+      body: { correo: 'ip@ejemplo.com', contrasena: 'cualquiera' },
+      forwardedFor: '203.0.113.9',
+    });
+    const { rows } = await pool.query<{ ip_truncada: string }>(
+      "SELECT ip_truncada FROM identity.evento_seguridad WHERE tipo = 'acceso_fallido' ORDER BY creado_en DESC LIMIT 1",
+    );
+    expect(rows[0]?.ip_truncada).toBe('203.0.113.0/24');
   });
 
   test('los eventos de seguridad quedan registrados sin contraseñas, tokens ni correos', async () => {

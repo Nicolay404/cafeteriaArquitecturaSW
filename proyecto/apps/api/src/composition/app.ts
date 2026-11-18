@@ -88,6 +88,9 @@ export async function createApp(config: AppConfig) {
   class AppModule {}
 
   const app = await NestFactory.create(AppModule, { logger: false });
+  // La web (otro contenedor de la red privada) reenvía la IP del visitante en X-Forwarded-For: solo
+  // se confía en esa cabecera si llega desde una dirección privada, nunca desde Internet.
+  app.getHttpAdapter().getInstance().set('trust proxy', 'loopback, linklocal, uniquelocal');
   app.enableShutdownHooks();
   return { app, mail };
 }
