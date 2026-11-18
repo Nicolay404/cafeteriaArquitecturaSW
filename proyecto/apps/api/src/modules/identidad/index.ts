@@ -1,1 +1,10 @@
-export { IdentidadModule } from './identidad.module.js';
+export { IdentidadModule, buildIdentidadModule } from './identidad.module.js';
+export type { IdentidadDeps } from './auth.controller.js';
+export { LoginService } from './login.service.js';
+export { RegistrationService } from './registration.service.js';
+export { PasswordPolicy, HibpChecker } from './password-policy.js';
+export { RateLimiter } from './rate-limiter.js';
+export { SecurityEvents } from './security-events.js';
+export { SessionStore } from './sessions.js';
+export { BackgroundMail } from './auth-support.js';
+export { Access } from './guards.js';

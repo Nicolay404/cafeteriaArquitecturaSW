@@ -1,11 +1,11 @@
 import 'reflect-metadata';
 import { readApiConfig } from './platform/config.js';
 import { ConfigurationError } from '../../../packages/config/src/env.js';
-import { createPlatformApp } from './platform/platform.module.js';
+import { createApp } from './composition/app.js';
 
 async function main() {
   const config = readApiConfig();
-  const app = await createPlatformApp(config);
+  const { app } = await createApp(config);
   await app.listen(config.port, '0.0.0.0');
 }
 
