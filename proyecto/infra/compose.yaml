@@ -55,6 +55,8 @@ services:
     image: axllent/mailpit:v1.33.1@sha256:aef2aacc11f075ec0fb6874275ee4a421e688e11a96ebb296134d1735c7761ce
     environment:
       MP_DATABASE: /data/mailpit.db
+      # Sin DNS inverso: el saludo SMTP no debe depender de la resolución de nombres local.
+      MP_SMTP_DISABLE_RDNS: 'true'
     ports:
       - '127.0.0.1:${SMTP_PORT:?SMTP_PORT requerida}:1025'
       - '127.0.0.1:${MAILPIT_UI_PORT:?MAILPIT_UI_PORT requerida}:8025'
