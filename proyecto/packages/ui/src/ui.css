@@ -1,0 +1,219 @@
+/*
+ * Tokens y componentes base de formulario (Spec #2, T010). PROPUESTA visual pendiente de la
+ * aprobación del equipo: decisions/visual-direction.md. Contrastes medidos y verificados por
+ * form.spec.tsx (texto >= 7:1, bordes y foco >= 3:1). Colores planos, sin degradados ni efectos.
+ * Sin fuentes de terceros: pilas del sistema (LOPDP: no se envía la IP a CDNs de fuentes).
+ */
+:root {
+  --crema: #f6efe4;
+  --tinte: #eadfcf;
+  --superficie: #ffffff;
+  --tinta: #2a1b12;
+  --tinta-suave: #52392a;
+  --cafe: #5a331a;
+  --cafe-oscuro: #40240f;
+  --enlace: #6a3512;
+  --error: #8b1a1a;
+  --exito: #164e26;
+  --foco: #1f1f1f;
+  --borde: #7a5c47;
+  --serifa: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+  --sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --radio: 12px;
+}
+
+.cuenta {
+  min-height: 100vh;
+  background: var(--crema);
+  color: var(--tinta);
+  font-family: var(--sans);
+  font-size: 1.125rem;
+  line-height: 1.6;
+}
+
+.cuenta-marco {
+  box-sizing: border-box;
+  max-width: 32rem;
+  margin-inline: auto;
+  padding: 2rem 1rem 3rem;
+}
+
+.cuenta h1 {
+  font-family: var(--serifa);
+  font-size: 2.25rem;
+  line-height: 1.15;
+  margin: 0 0 0.75rem;
+}
+
+.cuenta-intro {
+  margin: 0 0 1.5rem;
+  color: var(--tinta-suave);
+}
+
+.cuenta a {
+  color: var(--enlace);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  text-decoration-thickness: 1px;
+  transition: text-decoration-thickness 120ms;
+}
+.cuenta a:hover {
+  text-decoration-thickness: 3px;
+}
+
+.cuenta :focus-visible {
+  outline: 3px solid var(--foco);
+  outline-offset: 3px;
+}
+
+.campo {
+  margin: 0 0 1.25rem;
+}
+.campo label {
+  display: block;
+  margin-bottom: 0.375rem;
+  font-weight: 600;
+}
+.campo-obligatorio {
+  font-weight: 400;
+  color: var(--tinta-suave);
+}
+.campo-ayuda {
+  margin: 0.375rem 0 0;
+  color: var(--tinta-suave);
+  font-size: 1rem;
+}
+.campo-error {
+  margin: 0.375rem 0 0;
+  color: var(--error);
+  font-size: 1rem;
+  font-weight: 600;
+}
+.campo input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.5rem 0.875rem;
+  border: 2px solid var(--borde);
+  border-radius: var(--radio);
+  background: var(--superficie);
+  color: var(--tinta);
+  font: inherit;
+}
+.campo input[aria-invalid='true'] {
+  border-color: var(--error);
+}
+
+.campo-con-boton {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+.campo-con-boton input {
+  flex: 1;
+  min-width: 0;
+}
+
+.boton {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3rem;
+  min-width: 3rem;
+  padding: 0.5rem 1.5rem;
+  border: 2px solid var(--cafe);
+  border-radius: 999px;
+  background: var(--cafe);
+  color: var(--superficie);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 120ms,
+    transform 120ms;
+}
+.boton:hover {
+  background: var(--cafe-oscuro);
+  border-color: var(--cafe-oscuro);
+  transform: translateY(-1px);
+}
+.boton:active {
+  transform: translateY(1px);
+}
+.boton[disabled],
+.boton[aria-disabled='true'] {
+  cursor: progress;
+  opacity: 1;
+  background: var(--tinta-suave);
+  border-color: var(--tinta-suave);
+}
+.boton-secundario {
+  background: transparent;
+  color: var(--cafe);
+}
+.boton-secundario:hover {
+  background: var(--tinte);
+  color: var(--cafe-oscuro);
+}
+.boton-bloque {
+  width: 100%;
+}
+
+.resumen-errores {
+  margin: 0 0 1.5rem;
+  padding: 1rem 1.25rem;
+  border: 2px solid var(--error);
+  border-radius: var(--radio);
+  background: var(--superficie);
+  color: var(--tinta);
+}
+.resumen-errores h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.125rem;
+  color: var(--error);
+}
+.resumen-errores ul {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.estado {
+  margin: 0 0 1.5rem;
+  padding: 1rem 1.25rem;
+  border: 2px solid var(--exito);
+  border-radius: var(--radio);
+  background: var(--superficie);
+  color: var(--tinta);
+}
+.estado-error {
+  border-color: var(--error);
+}
+
+.cuenta-alternativa {
+  margin-top: 1.5rem;
+}
+
+/* Solo para lectores de pantalla: presente en el árbol de accesibilidad, fuera de la vista. */
+.solo-lectores {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .boton,
+  .cuenta a {
+    transition: none;
+  }
+  .boton:hover,
+  .boton:active {
+    transform: none;
+  }
+}

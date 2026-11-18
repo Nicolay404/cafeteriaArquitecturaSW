@@ -1,0 +1,8 @@
+import { defineConfig } from 'vitest/config';
+import { fileURLToPath } from 'node:url';
+
+export default defineConfig({
+  root: fileURLToPath(new URL('./', import.meta.url)),
+  oxc: { jsx: { runtime: 'automatic' } },
+  test: { name: 'ui', environment: 'node', include: ['src/**/*.spec.ts', 'src/**/*.spec.tsx'] },
+});

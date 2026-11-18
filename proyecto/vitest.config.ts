@@ -7,6 +7,7 @@ export default defineConfig({
     projects: [
       { test: { name: 'unit', environment: 'node', include: ['tests/unit/**/*.spec.ts'] } },
       'apps/web/vitest.config.ts',
+      'packages/ui/vitest.config.ts',
     ],
     coverage: {
       provider: 'v8',
