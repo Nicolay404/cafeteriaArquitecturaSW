@@ -1,0 +1,126 @@
+name: Calidad del PR
+
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: pr-quality-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+# Permisos mínimos: ningún job escribe en el repositorio.
+permissions:
+  contents: read
+
+env:
+  CI: 'true'
+
+jobs:
+  commits:
+    name: Cada commit es válido y verde por sí solo
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: proyecto/.node-version
+      - run: corepack enable
+      - name: Instalar con el lockfile congelado
+        working-directory: proyecto
+        run: pnpm install --frozen-lockfile
+      - name: Verificar todos los commits del PR
+        working-directory: proyecto
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: pnpm exec tsx ../scripts/ci/verify-commits.ts --repo .. --base "$BASE_SHA" --head "$HEAD_SHA" --keep-going
+
+  checks:
+    name: Lint, tipos, pruebas y build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: proyecto
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: proyecto/.node-version
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm format:check
+      - run: pnpm typecheck
+      - run: pnpm test:unit
+      # Testcontainers con Postgres, Redis y RabbitMQ reales; el runner trae Docker.
+      - run: pnpm test:integration
+      - run: pnpm build
+      - run: pnpm coverage:merge
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: lcov
+          path: proyecto/coverage/lcov.info
+          if-no-files-found: error
+          retention-days: 7
+
+  sonar:
+    name: SonarQube Quality Gate
+    needs: checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: lcov
+          path: proyecto/coverage
+      # Fallar cerrado: sin token (p. ej. PR desde un fork) NO se aprueba la calidad.
+      - name: Exigir el token de Sonar
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          if [ -z "$SONAR_TOKEN" ]; then
+            echo "::error::Falta SONAR_TOKEN: sin análisis de Sonar el PR no se aprueba (la ausencia no significa aprobado)."
+            exit 1
+          fi
+      - uses: SonarSource/sonarqube-scan-action@4d1dc0c91ee400dcf8a6dddf2f705ac36542e304 # v8.4.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io
+        with:
+          projectBaseDir: proyecto
+
+  calidad:
+    name: Calidad del PR
+    # Check agregado y estable para la protección de main: se aprueba solo si TODO pasó.
+    needs: [commits, checks, sonar]
+    if: ${{ always() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Exigir que todos los controles hayan pasado
+        env:
+          COMMITS: ${{ needs.commits.result }}
+          CHECKS: ${{ needs.checks.result }}
+          SONAR: ${{ needs.sonar.result }}
+        run: |
+          echo "commits=$COMMITS checks=$CHECKS sonar=$SONAR"
+          for result in "$COMMITS" "$CHECKS" "$SONAR"; do
+            if [ "$result" != "success" ]; then
+              echo "::error::Algún control no pasó (resultado: $result). Un control omitido o cancelado no cuenta como aprobado."
+              exit 1
+            fi
+          done
