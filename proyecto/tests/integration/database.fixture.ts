@@ -10,13 +10,18 @@ const directory = fileURLToPath(new URL('../../infra/migrations/', import.meta.u
 export async function freshMigratedDatabase(infrastructure: Infrastructure, label = 'it') {
   const name = `${label}_${randomUUID().replaceAll('-', '')}`;
   const admin = new Pool({ connectionString: infrastructure.databaseUrl, max: 1 });
+  admin.on('error', () => {});
   await admin.query(`CREATE DATABASE ${name}`);
   await admin.end();
   const url = new URL(infrastructure.databaseUrl);
   url.pathname = `/${name}`;
   const databaseUrl = url.toString();
   await migrate({ databaseUrl, directory });
-  return { databaseUrl, pool: new Pool({ connectionString: databaseUrl, max: 10 }) };
+  const pool = new Pool({ connectionString: databaseUrl, max: 10 });
+  // Si el contenedor se apaga con conexiones ociosas, pg emite 'error' en el pool: sin escuchador
+  // sería un error sin manejar que tumbaría una prueba que ya terminó (visto una vez en CI).
+  pool.on('error', () => {});
+  return { databaseUrl, pool };
 }
 
 /** Inserta una cuenta mínima y devuelve su id (los índices de correo son sintéticos). */
