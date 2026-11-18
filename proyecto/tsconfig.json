@@ -8,6 +8,7 @@
     "vitest.config.ts",
     "playwright.config.ts",
     "tests/e2e/**/*.ts",
-    "tests/smoke/**/*.ts"
+    "tests/smoke/**/*.ts",
+    "../scripts/ci/**/*.ts"
   ]
 }
