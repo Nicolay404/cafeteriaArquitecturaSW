@@ -71,6 +71,8 @@ export async function startInfrastructure() {
       .withStartupTimeout(120_000)
       .start();
     containers.redis = await new GenericContainer(images.redis)
+      // Misma persistencia que infra/compose.yaml: los flags deben sobrevivir a un reinicio.
+      .withCommand(['redis-server', '--appendonly', 'yes'])
       .withExposedPorts(6379)
       .withHealthCheck({
         test: ['CMD', 'redis-cli', 'ping'],

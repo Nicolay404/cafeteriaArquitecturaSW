@@ -50,6 +50,7 @@
     "test:smoke": "playwright test --config tests/smoke/playwright.config.ts",
     "dev": "tsx scripts/dev.ts",
     "infra:check": "tsx scripts/infra-check.ts",
-    "prepare": "cd .. && husky"
+    "prepare": "cd .. && husky",
+    "flags:set": "tsx scripts/flags-set.ts"
   }
 }
