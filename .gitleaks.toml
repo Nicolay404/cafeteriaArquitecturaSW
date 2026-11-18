@@ -1,10 +1,10 @@
 # Gitleaks: reglas por defecto más UNA excepción mínima y justificada.
+# Sintaxis [allowlist] (válida desde 8.x): la acción de GitHub instala una versión anterior a 8.25,
+# que ignora en silencio [[allowlists]].
 [extend]
 useDefault = true
 
-[[allowlists]]
+[allowlist]
 description = "El identificador del proyecto de Sonar es público (aparece en la URL del panel), no una credencial."
 regexTarget = "match"
-regexes = ['''^sonar\.projectKey=[A-Za-z0-9_.:-]+$''']
-paths = ['''proyecto/sonar-project\.properties''']
-condition = "AND"
+regexes = ['''^sonar\.projectKey=Nicolay404_cafeteriaArquitecturaSW$''']
