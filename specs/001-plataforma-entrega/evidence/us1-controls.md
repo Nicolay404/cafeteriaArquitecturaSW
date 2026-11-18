@@ -25,9 +25,23 @@ En el ensayo #9, **Trivy pasó** con el mismo `lodash` vulnerable. Se comprobó 
 ## Qué no se probó
 
 - **Sonar caído**: se comprobó en la primera ejecución real (sin `SONAR_TOKEN` el job falló cerrado), no en esta tanda.
-- **Fallo intermitente**: la lógica existe y está probada como librería (`evaluarEjecuciones`), pero **no está conectada al pipeline** de GitHub. Un job que falle y pase al reintentar hoy figuraría como verde en el último intento.
 - Un control **omitido o cancelado** en el check agregado: el script lo trata como fallo, pero no se provocó en estos ensayos.
 
 ## Rastro y limpieza
 
 Los PR #5 al #10 se cerraron sin fusionar y sus ramas se borraron. GitHub conserva los commits por su identificador durante un tiempo; los valores del fixture de secretos son aleatorios y no válidos, pero Gitleaks los trata como reales.
+
+## Ensayo del fallo intermitente (PR #12, cerrado sin fusionar)
+
+El hueco que dejó la primera tanda se cerró con `proyecto/scripts/ci/check-attempts.ts`, conectado a los checks agregados «Calidad del PR» y «Seguridad». Cuando un run se reintenta, compara los jobs de **todos** los intentos con la API de Actions; solo corre si `run_attempt` es mayor que 1, así que no añade tiempo al caso normal.
+
+**Ensayo real:** un paso simulado fallaba solo en el intento 1.
+
+| Intento | Resultado |
+|---|---|
+| 1 | `Lint, tipos, pruebas y build` **falló** en el paso «Fallo intermitente simulado (ENSAYO)»; el agregado quedó en rojo |
+| 2 (`gh run rerun --failed`) | **Todos los controles pasaron**, incluido el que había fallado. Aun así, «Calidad del PR» quedó **en rojo**: «BLOQUEADO: hay controles que fallaron y pasaron al reintentar» y, como causa original, «el intento 1 falló (paso «Fallo intermitente simulado (ENSAYO)») y un reintento pasó» |
+
+Sin el detector, ese PR habría quedado verde y fusionable. **Falla cerrado:** una API sin respuesta, sin permiso o con configuración inválida bloquea. Las pruebas unitarias (19) cubren intermitente, fallo persistente, controles cancelados u omitidos, varios controles a la vez, errores de la API y variables de entorno incorrectas; la mutación de la comparación, del rango de intentos y de la condición del primer intento hace fallar las pruebas.
+
+**Límite:** un reintento sin fallos previos (control positivo) se probó con datos simulados, no aún con un run real de GitHub con el detector incluido.

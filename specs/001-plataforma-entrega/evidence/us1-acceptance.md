@@ -30,7 +30,7 @@
 
 ## Límites y pendientes honestos
 
-1. **Fallo intermitente (FR-008 y el caso límite del spec):** la librería existe y está probada, pero **no está conectada al pipeline**. Hoy un job que falle y pase al reintentar no quedaría marcado como intermitente. Es un hueco real de US1.
+1. **Fallo intermitente (FR-008 y el caso límite del spec): resuelto.** El detector está conectado a los checks agregados y se probó de punta a punta en GitHub (PR #12): un reintento verde que ocultaba un fallo anterior queda bloqueado con la causa original. Pendiente de fusionar en `main` (ver el PR de seguimiento).
 2. **Una aprobación obligatoria** está configurada y las colaboradoras tienen permiso para aprobar, pero **no se ejercitó en un caso real**. El primer PR que se fusione bajo la regla (el #11) lo demostrará.
 3. **Cobertura del 95 % en promociones, pedidos y pagos:** no está conectada a Sonar, y esos módulos aún no tienen lógica.
 4. **OSV tiene una excepción temporal** hasta el 2026-12-18 para tres alertas de herramientas de desarrollo.
@@ -39,4 +39,4 @@
 
 ## Veredicto
 
-US1 está **cumplida en sus escenarios 1 a 5**, con dos huecos que no son de configuración sino de funcionalidad: el fallo intermitente y la cobertura por módulo. No se declara cerrada del todo hasta resolver el primero.
+US1 está **cumplida en sus escenarios 1 a 5** y el hueco del fallo intermitente quedó resuelto y probado. Queda un hueco de funcionalidad, no de configuración: la cobertura del 95 % por módulo crítico, que espera a que esos módulos tengan lógica.
