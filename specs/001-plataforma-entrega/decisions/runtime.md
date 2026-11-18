@@ -13,6 +13,7 @@
 | Turbo | 2.11.11 | Orquestación monorepo |
 | ESLint / typescript-eslint / boundaries | 10.15.0 / 8.73.0 / 7.4.4 | Tipos y límites entre módulos |
 | Prettier / tsx / Vitest | 3.10.1 / 4.23.15 / 5.1.0 | Formato, ejecutar scripts TS y pruebas de configuración |
+| @vitest/coverage-v8 / @playwright/test | 5.1.0 / 1.64.1 | Cobertura LCOV de Vitest (peer exacto) y E2E/smoke (T016); 1.64.1 tiene más de un mes publicada |
 | @types/node / @types/react / @types/react-dom | 24.10.1 / 19.3.0 / 19.3.0 | Tipos de la línea runtime/UI usada |
 
 Metadatos engines/peers consultados con npm.cmd view. Instalación inicial sin scripts de ciclo de vida; imports reales de next/react/react-dom/server/Nest/TypeScript/lint/Vitest pasaron. tsc/eslint/prettier/turbo devolvieron las versiones fijadas. Instalación congelada con registro pasó; offline falló por metadatos de política de dependencias no cacheados. No desactivar políticas para forzar offline. pnpm generó excepciones explícitas minimumReleaseAgeExclude para las versiones directas seleccionadas y sus paquetes internos; no deshabilitar globalmente esa política.
@@ -60,3 +61,7 @@ Versiones/engines/peers consultados en metadatos públicos del registro npm medi
 pnpm agregó automáticamente una exclusión exacta de antigüedad para amqplib@2.4.0, siguiendo su política configurada para versiones seleccionadas; no se deshabilitó globalmente minimumReleaseAge ni la verificación de suministro. Se eliminó @types/amqplib porque 2.4.0 ya trae tipos. La instalación congelada posterior pasó con el SHA256 del lockfile inalterado: 8795E998009D5F3F745432B66B39B855120B3A292F8FBD5A8E274879E9765E4F.
 
 Jest: [configuración](https://jestjs.io/docs/configuration), [ESM](https://jestjs.io/docs/ecmascript-modules). Testcontainers: [ciclo de vida y reinicio](https://node.testcontainers.org/features/containers/), [esperas](https://node.testcontainers.org/features/wait-strategies/). La prueba detectó que los puertos pueden cambiar al reiniciar: las URLs del fixture usan getters; RabbitMQ espera check_running y check_port_connectivity, no solo ping del proceso Erlang. Estos ajustes son del arnés aislado de T010, no de T007.
+
+## Scripts de build de dependencias — T016
+
+pnpm 12 trata como error los scripts de ciclo de vida sin decidir (`ERR_PNPM_IGNORED_BUILDS`), así que la instalación congelada fallaba al enlazar paquetes nuevos. `pnpm-workspace.yaml` declara `allowBuilds` en `false` para @parcel/watcher, cpu-features, esbuild, protobufjs y ssh2, lo que mantiene la política de no ejecutar esos scripts. Todas las suites pasan sin ellos. Si una dependencia nueva necesita un script de build, se aprueba por nombre y se justifica aquí. Evidencia: [../evidence/t016-quality-scripts.md](../evidence/t016-quality-scripts.md).

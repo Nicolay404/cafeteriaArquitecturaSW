@@ -8,6 +8,10 @@
     "dev": {
       "cache": false,
       "persistent": true
+    },
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
     }
   },
   "globalDependencies": ["packages/config/**", "tsconfig.json"]

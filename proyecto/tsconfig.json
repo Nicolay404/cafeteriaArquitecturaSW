@@ -4,6 +4,10 @@
     "scripts/**/*.ts",
     "tests/unit/**/*.ts",
     "packages/config/src/**/*.ts",
-    "tests/integration/**/*.ts"
+    "tests/integration/**/*.ts",
+    "vitest.config.ts",
+    "playwright.config.ts",
+    "tests/e2e/**/*.ts",
+    "tests/smoke/**/*.ts"
   ]
 }
