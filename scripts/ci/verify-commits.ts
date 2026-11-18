@@ -86,14 +86,14 @@ export const spawnRunner: CommandRunner = (command, args, options) =>
 
 const tail = (text: string, lines = 30) => text.trimEnd().split(/\r?\n/).slice(-lines).join('\n');
 
-async function run(repo: string, ...args: string[]) {
+export async function run(repo: string, ...args: string[]) {
   const { stdout } = await git('git', ['-C', repo, ...args], {
     maxBuffer: 64 * 1024 * 1024,
   });
   return stdout.trim();
 }
 
-async function resolveCommit(repo: string, ref: string, label: string) {
+export async function resolveCommit(repo: string, ref: string, label: string) {
   try {
     return await run(repo, 'rev-parse', '--verify', '--quiet', `${ref}^{commit}`);
   } catch {
@@ -175,38 +175,20 @@ export async function verifyCommits(options: {
   return { ok: commits.every((item) => item.status === 'ok'), commits };
 }
 
-async function verifyInWorktree(
+/**
+ * Ejecuta `action` en un checkout temporal aislado (git worktree) de `ref`, sin cambiar la
+ * rama, el índice ni el árbol de trabajo, y lo borra siempre. Lo usan la verificación de
+ * commits y la de revert.
+ */
+export async function withWorktree<T>(
   top: string,
-  sha: string,
-  parent: string,
-  mode: Mode,
-  commands: VerifyCommands,
-  runner: CommandRunner,
-): Promise<Pick<CommitReport, 'status' | 'stage' | 'detail'>> {
+  ref: string,
+  action: (directory: string) => Promise<T>,
+): Promise<T> {
   const directory = await mkdtemp(join(tmpdir(), 'cafeteria-verify-'));
   try {
-    await run(top, 'worktree', 'add', '--detach', '--quiet', directory, sha);
-    const cwd = join(directory, 'proyecto');
-    const [installCommand, ...installArgs] = commands.install;
-    const install = await runner(installCommand!, installArgs, { cwd });
-    if (install.code !== 0)
-      return {
-        status: 'fallo',
-        stage: 'instalacion',
-        detail: tail(install.output),
-      };
-    const steps = mode === 'raiz' ? commands.full : commands.affected;
-    for (const step of steps) {
-      const [command, ...args] = step.map((item) => item.replaceAll('{parent}', parent));
-      const result = await runner(command!, args, { cwd });
-      if (result.code !== 0)
-        return {
-          status: 'fallo',
-          stage: 'comprobacion',
-          detail: `${[command, ...args].join(' ')}\n${tail(result.output)}`,
-        };
-    }
-    return { status: 'ok' };
+    await run(top, 'worktree', 'add', '--detach', '--quiet', directory, ref);
+    return await action(directory);
   } finally {
     // La limpieza nunca puede tapar el veredicto: en Windows un proceso hijo (p. ej. Turbo)
     // puede tardar en soltar el directorio, así que se reintenta y, si no se logra, se avisa.
@@ -216,6 +198,51 @@ async function verifyInWorktree(
     );
     await run(top, 'worktree', 'prune').catch(() => undefined);
   }
+}
+
+/** Instala y ejecuta los pasos en proyecto/ de un checkout ya preparado. */
+export async function runChecks(
+  directory: string,
+  install: string[],
+  steps: string[][],
+  runner: CommandRunner,
+  parent = '',
+): Promise<Pick<CommitReport, 'status' | 'stage' | 'detail'>> {
+  const cwd = join(directory, 'proyecto');
+  const [installCommand, ...installArgs] = install;
+  const installed = await runner(installCommand!, installArgs, { cwd });
+  if (installed.code !== 0)
+    return { status: 'fallo', stage: 'instalacion', detail: tail(installed.output) };
+  for (const step of steps) {
+    const [command, ...args] = step.map((item) => item.replaceAll('{parent}', parent));
+    const result = await runner(command!, args, { cwd });
+    if (result.code !== 0)
+      return {
+        status: 'fallo',
+        stage: 'comprobacion',
+        detail: `${[command, ...args].join(' ')}\n${tail(result.output)}`,
+      };
+  }
+  return { status: 'ok' };
+}
+
+async function verifyInWorktree(
+  top: string,
+  sha: string,
+  parent: string,
+  mode: Mode,
+  commands: VerifyCommands,
+  runner: CommandRunner,
+): Promise<Pick<CommitReport, 'status' | 'stage' | 'detail'>> {
+  return withWorktree(top, sha, (directory) =>
+    runChecks(
+      directory,
+      commands.install,
+      mode === 'raiz' ? commands.full : commands.affected,
+      runner,
+      parent,
+    ),
+  );
 }
 
 export const defaultCommands: VerifyCommands = {
