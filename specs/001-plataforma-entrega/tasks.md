@@ -36,7 +36,7 @@ Tests obligatorios por constitución VI: casos antes de comportamiento, verifica
 - [X] T017 Ejecutar contratos/integración real hasta pasar degradación/recuperación/reinicio/persistencia técnica; guardar resultados en `specs/001-plataforma-entrega/evidence/local-infrastructure.md` (dep. T016).
 - [X] T018 Probar inicio básico→API, semántica/teclado/foco/axe en `proyecto/tests/e2e/bootstrap.spec.ts` y `proyecto/tests/smoke/bootstrap.spec.ts`; E2E arranca/espera apps, sin requerir diseño/material final (dep. T017).
 - [X] T019 Verificar instalación/build congelados e import prohibido en `proyecto/tests/unit/module-boundaries.spec.ts`; guardar versiones/lockfile intacto/reportes en `specs/001-plataforma-entrega/evidence/local-quality.md` (dep. T018).
-- [ ] T020 Documentar arranque real/puertos/entorno/errores/segundo arranque/parada sin borrar volúmenes en `README.md` y `specs/001-plataforma-entrega/evidence/bootstrap-procedure.md`, sin cambiar spec/plan (dep. T019).
+- [X] T020 Documentar arranque real/puertos/entorno/errores/segundo arranque/parada sin borrar volúmenes en `README.md` y `specs/001-plataforma-entrega/evidence/bootstrap-procedure.md`, sin cambiar spec/plan (dep. T019).
 - [ ] T021 Registrar amenazas iniciales/ASVS L2 de superficie, inventario aún sin recolección, límites CU003 y Constitution Check documental en `specs/001-plataforma-entrega/decisions/platform-baseline.md`, sin certificar cloud ni implementar identidad (dep. T020).
 - [ ] T022 Proponer a una compañera repetir T002–T020 desde clon/copia limpia del candidato sin .env/cache/instalación privada del autor y registrar aceptación/fallas H0 en `specs/001-plataforma-entrega/evidence/clean-clone.md`; no crear sprint ni asignar otro spec (dep. T021).
 
@@ -281,3 +281,7 @@ E2E Playwright/Chromium contra `pnpm dev` real y Compose: 8/8 (idioma/título/h1
 ## T019 verificada — 2026-11-18
 
 Clon limpio del candidato (solo lo commiteado, sin node_modules, .env ni caché del autor): instalación congelada 12 s, lockfile y manifiestos intactos, tipos, lint, formato, 30 + 7 pruebas unitarias y build de web, API y worker pasan. Nueva prueba module-boundaries.spec.ts (6/6) ejecuta el ESLint real: rechaza imports a la implementación de otro módulo o de platform y acepta index.ts. Evidencia: [evidence/local-quality.md](evidence/local-quality.md). No sustituye T022 (repetición independiente).
+
+## T020 verificada — 2026-11-18
+
+README reescrito con el arranque real (instalación, entorno, Compose, puertos, dev, parada y segundo arranque) y una tabla de errores frecuentes tomados de fallos provocados: sin .env, variable ausente, puerto ocupado e infraestructura apagada. Se comprobó que la parada sin -v conserva los volúmenes y que una fila técnica de Postgres sobrevive al segundo arranque de Compose. El arranque de dev y su parada con Ctrl+C remiten a T015. Solo probado en Windows. Evidencia: [evidence/bootstrap-procedure.md](evidence/bootstrap-procedure.md).
