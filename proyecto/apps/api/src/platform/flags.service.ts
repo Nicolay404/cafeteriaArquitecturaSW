@@ -1,9 +1,10 @@
 import { createClient } from 'redis';
 
 // FR-005 / Constitución VII: las funciones incompletas se integran detrás de un flag que se
-// puede apagar en runtime, sin redeploy. Solo claves técnicas de la plataforma, nunca de negocio.
-// Una clave nueva se añade aquí a propósito: lo que no figura en la lista no se puede escribir.
-export const TECHNICAL_FLAGS = ['capacidad-tecnica-de-prueba'] as const;
+// puede apagar en runtime, sin redeploy. Son interruptores de entrega (ocultar lo incompleto), no
+// reglas de negocio. Una clave nueva se añade aquí a propósito: lo que no figura no se puede escribir.
+//   identidad-habilitada: rutas de Identidad y Clientes del Spec #2 mientras no estén cerradas.
+export const TECHNICAL_FLAGS = ['capacidad-tecnica-de-prueba', 'identidad-habilitada'] as const;
 export type TechnicalFlag = (typeof TECHNICAL_FLAGS)[number];
 
 export interface FlagTecnico {

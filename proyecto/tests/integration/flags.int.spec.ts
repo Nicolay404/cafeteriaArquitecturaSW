@@ -54,7 +54,26 @@ describe('T050 — flags técnicos con Redis real', () => {
   });
 
   test('la lista de claves permitidas es explícita y mínima', () => {
-    expect([...TECHNICAL_FLAGS]).toEqual([FLAG]);
+    expect([...TECHNICAL_FLAGS]).toEqual([FLAG, 'identidad-habilitada']);
+  });
+
+  test('identidad-habilitada está apagado por defecto y se enciende sin redeploy', async () => {
+    const flags = new FlagsService({ redisUrl: infrastructure.redisUrl, flagsPrefix: prefix });
+    expect(await flags.isEnabled('identidad-habilitada')).toBe(false);
+    await setFlag({
+      redisUrl: infrastructure.redisUrl,
+      prefix,
+      key: 'identidad-habilitada',
+      enabled: true,
+    });
+    expect(await flags.isEnabled('identidad-habilitada')).toBe(true);
+    await setFlag({
+      redisUrl: infrastructure.redisUrl,
+      prefix,
+      key: 'identidad-habilitada',
+      enabled: false,
+    });
+    expect(await flags.isEnabled('identidad-habilitada')).toBe(false);
   });
 
   test('sin valor, el flag está apagado y la capacidad se oculta', async () => {
