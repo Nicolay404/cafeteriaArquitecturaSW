@@ -9,7 +9,7 @@
 // descuento y las bloquea; una acumulable usa ranuras no bloqueadas y descuenta sobre el precio
 // restante.
 
-import { centavos, descuentoPorcentual, type Centavos } from './dinero.js';
+import { centavos, descuentoPorcentual, repartirProporcional, type Centavos } from './dinero.js';
 import { normalizarCupon } from './promocion.js';
 import type {
   Cotizacion,
@@ -24,13 +24,6 @@ export class SolicitudInvalida extends Error {
   constructor(mensaje: string) {
     super(mensaje);
     this.name = 'SolicitudInvalida';
-  }
-}
-
-export class TipoNoSoportado extends Error {
-  constructor(tipo: string) {
-    super(`El motor todavía no calcula promociones de tipo «${tipo}».`);
-    this.name = 'TipoNoSoportado';
   }
 }
 
@@ -79,6 +72,8 @@ function validarLineas(lineas: readonly LineaACotizar[]): LineaACotizar[] {
 }
 
 function enAlcance(promocion: Promocion, linea: LineaACotizar): boolean {
+  if (promocion.valor.tipo === 'combo')
+    return promocion.valor.productos.some((p) => p.productoId === linea.productoId);
   const { productoIds, categoriaIds, menuIds } = promocion.alcance;
   return (
     productoIds.includes(linea.productoId) ||
@@ -109,17 +104,76 @@ function elegible(promocion: Promocion, ranura: Ranura): boolean {
   return promocion.acumulable || !ranura.conDescuento;
 }
 
+/** Ordena de mayor a menor precio restante; `sort` es estable, así que el empate conserva el
+ * orden de las ranuras (por productoId). */
+const deMayorAMenor = (ranuras: readonly Ranura[]): Ranura[] =>
+  [...ranuras].sort((a, b) => b.restante - a.restante);
+
+/** N×M: en cada grupo completo de N unidades, las N−M más baratas salen gratis. */
+function planificarNxM(ranuras: readonly Ranura[], lleva: number, paga: number): Aplicacion[] {
+  const ordenadas = deMayorAMenor(ranuras);
+  const completas = ordenadas.length - (ordenadas.length % lleva);
+  return ordenadas
+    .slice(0, completas)
+    .filter((_ranura, i) => i % lleva >= paga)
+    .map((ranura) => ({ ranura, descuento: ranura.restante }));
+}
+
+type ValorCombo = Extract<Promocion['valor'], { tipo: 'combo' }>;
+
+/** Combo: forma tantos conjuntos completos como se pueda, con las unidades más caras primero, y
+ * reparte el descuento de cada conjunto (suma − precio) proporcionalmente entre sus unidades. */
+function planificarCombo(ranuras: readonly Ranura[], combo: ValorCombo): Aplicacion[] {
+  const porProducto = combo.productos.map((p) => ({
+    cantidad: p.cantidad,
+    disponibles: deMayorAMenor(ranuras.filter((r) => r.linea.productoId === p.productoId)),
+  }));
+  const conjuntos = Math.min(
+    ...porProducto.map((p) => Math.floor(p.disponibles.length / p.cantidad)),
+  );
+  const aplicaciones: Aplicacion[] = [];
+  for (let k = 0; k < conjuntos; k += 1) {
+    const conjunto = porProducto.flatMap((p) =>
+      p.disponibles.slice(k * p.cantidad, (k + 1) * p.cantidad),
+    );
+    const precios = conjunto.map((r) => r.restante);
+    const suma = precios.reduce((s, precio) => s + precio, 0);
+    if (suma <= combo.precioCentavos) continue;
+    repartirProporcional(suma - combo.precioCentavos, precios).forEach((descuento, i) => {
+      aplicaciones.push({ ranura: conjunto[i] as Ranura, descuento });
+    });
+  }
+  return aplicaciones;
+}
+
 /** Descuentos que aplicaría `promocion` sobre las ranuras en su estado actual. */
 function planificar(promocion: Promocion, ranuras: readonly Ranura[]): Aplicacion[] {
   const valor = promocion.valor;
-  if (valor.tipo !== 'porcentaje') throw new TipoNoSoportado(valor.tipo);
-  return ranuras
-    .filter((ranura) => enAlcance(promocion, ranura.linea) && elegible(promocion, ranura))
-    .map((ranura) => ({
-      ranura,
-      descuento: descuentoPorcentual(ranura.restante, valor.puntosBasicos),
-    }))
-    .filter((aplicacion) => aplicacion.descuento > 0);
+  const elegibles = ranuras.filter(
+    (ranura) => enAlcance(promocion, ranura.linea) && elegible(promocion, ranura),
+  );
+  let aplicaciones: Aplicacion[];
+  switch (valor.tipo) {
+    case 'porcentaje':
+      aplicaciones = elegibles.map((ranura) => ({
+        ranura,
+        descuento: descuentoPorcentual(ranura.restante, valor.puntosBasicos),
+      }));
+      break;
+    case 'monto_fijo':
+      aplicaciones = elegibles.map((ranura) => ({
+        ranura,
+        descuento: Math.min(valor.centavos, ranura.restante),
+      }));
+      break;
+    case 'nxm':
+      aplicaciones = planificarNxM(elegibles, valor.lleva, valor.paga);
+      break;
+    case 'combo':
+      aplicaciones = planificarCombo(elegibles, valor);
+      break;
+  }
+  return aplicaciones.filter((aplicacion) => aplicacion.descuento > 0);
 }
 
 const total = (aplicaciones: readonly Aplicacion[]): Centavos =>

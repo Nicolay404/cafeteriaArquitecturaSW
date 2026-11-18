@@ -54,9 +54,9 @@ Rutas relativas a `proyecto/`; `promociones/` = `apps/api/src/modules/promocione
 **Goal**: monto fijo, N×M y combo con resultados exactos.
 **Independent Test**: un carrito de prueba por tipo con el precio final calculado a mano.
 
-- [ ] T012 [P] [US2] TDD monto fijo por unidad, nunca negativo (US2.2) en `motor-precios.spec.ts` + implementación (LOCAL).
-- [ ] T013 [P] [US2] TDD N×M: 2x1 con 3 unidades paga 2 (US2.3), 3x2, mezcla de productos de una categoría (gratis los más baratos) + implementación (LOCAL; R5).
-- [ ] T014 [US2] TDD combo: pareja café + sánduche (US2.4), combo completado varias veces, combo incompleto no aplica, reparto proporcional exacto del descuento entre unidades + implementación (LOCAL; R5).
+- [x] T012 [P] [US2] TDD monto fijo por unidad, nunca negativo (US2.2) en `motor-precios.spec.ts` + implementación (LOCAL).
+- [x] T013 [P] [US2] TDD N×M: 2x1 con 3 unidades paga 2 (US2.3), 3x2, mezcla de productos de una categoría (gratis los más baratos) + implementación (LOCAL; R5).
+- [x] T014 [US2] TDD combo: pareja café + sánduche (US2.4), combo completado varias veces, combo incompleto no aplica, reparto proporcional exacto del descuento entre unidades + implementación (LOCAL; R5).
 
 ---
 

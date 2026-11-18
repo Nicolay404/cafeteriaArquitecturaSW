@@ -1,5 +1,5 @@
 import { describe, expect, it } from '@jest/globals';
-import { SolicitudInvalida, TipoNoSoportado, calcularCotizacion } from './motor-precios.js';
+import { SolicitudInvalida, calcularCotizacion } from './motor-precios.js';
 import type { LineaACotizar, Promocion } from './tipos.js';
 
 const DENTRO = new Date('2026-12-23T15:00:00.000Z');
@@ -268,9 +268,145 @@ describe('calcularCotizacion — entradas inválidas', () => {
       SolicitudInvalida,
     );
   });
+});
 
-  it('avisa de los tipos que aún no calcula en lugar de ignorarlos en silencio', () => {
-    const p = promo({ id: 'p', valor: { tipo: 'monto_fijo', centavos: 50 } });
-    expect(() => calcularCotizacion({ lineas: [cafe] }, [p], DENTRO)).toThrow(TipoNoSoportado);
+const soloCafe = { productoIds: ['cafe'], categoriaIds: [], menuIds: [] };
+const descuentos = (c: ReturnType<typeof calcularCotizacion>): Record<string, number> =>
+  Object.fromEntries(c.lineas.map((l) => [l.productoId, l.descuentoCentavos]));
+
+describe('calcularCotizacion — monto fijo (T012, US2.2)', () => {
+  it('descuenta el monto por unidad', () => {
+    const p = promo({ id: 'p', alcance: soloCafe, valor: { tipo: 'monto_fijo', centavos: 50 } });
+    expect(calcularCotizacion({ lineas: [cafe] }, [p], DENTRO).descuentoCentavos).toBe(100);
+  });
+
+  it('un monto mayor que el precio deja el precio en 0, nunca negativo', () => {
+    const p = promo({ id: 'p', alcance: soloCafe, valor: { tipo: 'monto_fijo', centavos: 300 } });
+    const c = calcularCotizacion({ lineas: [cafe] }, [p], DENTRO);
+    expect(c.lineas[0]).toMatchObject({ descuentoCentavos: 500, totalCentavos: 0 });
+  });
+
+  it('acumulado tras un porcentaje se limita al precio restante', () => {
+    const pct = promo({ id: 'a', acumulable: true, prioridad: 5 });
+    const fijo = promo({
+      id: 'b',
+      acumulable: true,
+      alcance: soloCafe,
+      valor: { tipo: 'monto_fijo', centavos: 300 },
+    });
+    const c = calcularCotizacion({ lineas: [cafe] }, [pct, fijo], DENTRO);
+    expect(c.totalCentavos).toBe(0);
+    expect(c.lineas[0]?.promociones.map((p) => p.descuentoCentavos)).toEqual([100, 400]);
+  });
+});
+
+describe('calcularCotizacion — N×M (T013, US2.3)', () => {
+  const dosPorUno = { tipo: 'nxm', lleva: 2, paga: 1 } as const;
+  const tresPorDos = { tipo: 'nxm', lleva: 3, paga: 2 } as const;
+  const te: LineaACotizar = { ...cafe, productoId: 'te', cantidad: 1, precioBaseCentavos: 200 };
+
+  it.each([
+    ['2x1 con 3 unidades paga 2', dosPorUno, 3, 250],
+    ['2x1 con 1 unidad no descuenta', dosPorUno, 1, 0],
+    ['2x1 con 4 unidades paga 2', dosPorUno, 4, 500],
+    ['3x2 con 3 unidades paga 2', tresPorDos, 3, 250],
+    ['3x2 con 5 unidades paga 4', tresPorDos, 5, 250],
+    ['3x2 con 6 unidades paga 4', tresPorDos, 6, 500],
+  ] as const)('%s', (_caso, valor, cantidad, descuento) => {
+    const p = promo({ id: 'p', alcance: soloCafe, valor });
+    const c = calcularCotizacion({ lineas: [{ ...cafe, cantidad }] }, [p], DENTRO);
+    expect(c.descuentoCentavos).toBe(descuento);
+    expect(c.promocionesAplicadas.length).toBe(descuento > 0 ? 1 : 0);
+  });
+
+  it('con productos distintos de la categoría, la unidad gratis es la más barata del grupo', () => {
+    const p = promo({ id: 'p', valor: dosPorUno });
+    const c = calcularCotizacion({ lineas: [{ ...cafe, cantidad: 1 }, te] }, [p], DENTRO);
+    expect(descuentos(c)).toEqual({ cafe: 0, te: 200 });
+  });
+
+  it('los grupos se forman de mayor a menor precio', () => {
+    // 250, 250, 200 → grupo [250, 250] deja gratis un café; el té queda sin grupo
+    const p = promo({ id: 'p', valor: dosPorUno });
+    const c = calcularCotizacion({ lineas: [cafe, te] }, [p], DENTRO);
+    expect(descuentos(c)).toEqual({ cafe: 250, te: 0 });
+  });
+});
+
+describe('calcularCotizacion — combo (T014, US2.4)', () => {
+  const sanduche: LineaACotizar = {
+    productoId: 'sanduche',
+    categoriaIds: ['salados'],
+    menuId: 'desayuno',
+    cantidad: 1,
+    precioBaseCentavos: 400,
+  };
+  const comboValor = (precioCentavos: number) =>
+    ({
+      tipo: 'combo',
+      productos: [
+        { productoId: 'cafe', cantidad: 1 },
+        { productoId: 'sanduche', cantidad: 1 },
+      ],
+      precioCentavos,
+    }) as const;
+  const sinAlcance = { productoIds: [], categoriaIds: [], menuIds: [] };
+  const combo = (precio = 500) =>
+    promo({ id: 'combo', alcance: sinAlcance, valor: comboValor(precio) });
+
+  it('café + sánduche a 5,00: reparte 1,50 proporcionalmente y exacto', () => {
+    const c = calcularCotizacion(
+      { lineas: [{ ...cafe, cantidad: 1 }, sanduche] },
+      [combo()],
+      DENTRO,
+    );
+    // 150 × 250/650 = 57,7 → 57 (+1 sobrante por orden) = 58; 150 × 400/650 = 92,3 → 92
+    expect(descuentos(c)).toEqual({ cafe: 58, sanduche: 92 });
+    expect(c.totalCentavos).toBe(500);
+  });
+
+  it('se aplica tantas veces como se complete', () => {
+    const c = calcularCotizacion(
+      { lineas: [cafe, { ...sanduche, cantidad: 2 }] },
+      [combo()],
+      DENTRO,
+    );
+    expect(c.descuentoCentavos).toBe(300);
+  });
+
+  it('un conjunto incompleto no recibe descuento', () => {
+    const c = calcularCotizacion({ lineas: [cafe, sanduche] }, [combo()], DENTRO);
+    expect(c.descuentoCentavos).toBe(150);
+    expect(calcularCotizacion({ lineas: [cafe] }, [combo()], DENTRO).descuentoCentavos).toBe(0);
+  });
+
+  it('no se aplica si el precio del combo no es menor que la suma', () => {
+    const c = calcularCotizacion(
+      { lineas: [{ ...cafe, cantidad: 1 }, sanduche] },
+      [combo(650)],
+      DENTRO,
+    );
+    expect(c.descuentoCentavos).toBe(0);
+  });
+
+  it('admite varias unidades del mismo producto', () => {
+    const valor = {
+      tipo: 'combo',
+      productos: [{ productoId: 'cafe', cantidad: 2 }],
+      precioCentavos: 400,
+    } as const;
+    const p = promo({ id: 'p', alcance: sinAlcance, valor });
+    const c = calcularCotizacion({ lineas: [{ ...cafe, cantidad: 3 }] }, [p], DENTRO);
+    expect(c.descuentoCentavos).toBe(100);
+  });
+
+  it('las unidades del combo no acumulable no reciben otras promociones', () => {
+    const pct = promo({ id: 'pct' }); // 20 % en calientes, misma prioridad
+    const c = calcularCotizacion({ lineas: [cafe, sanduche] }, [combo(), pct], DENTRO);
+    // combo (150) gana a 20 % sobre dos cafés (100); el café sobrante sí recibe el 20 %
+    expect(c.promocionesAplicadas).toEqual([
+      { promocionId: 'combo', nombre: 'Promo combo', descuentoCentavos: 150 },
+      { promocionId: 'pct', nombre: 'Promo pct', descuentoCentavos: 50 },
+    ]);
   });
 });
