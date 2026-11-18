@@ -140,6 +140,21 @@ corepack.cmd pnpm coverage:merge     # un único coverage/lcov.info
 
 `test:smoke` apunta a un entorno ya arrancado y exige `SMOKE_WEB_URL` y `SMOKE_API_URL`. Axe sin violaciones **no demuestra WCAG AAA**: faltan lector de pantalla y revisión humana. Un solo test: ver `CLAUDE.md`. Resultados y límites en [quickstart.md](specs/001-plataforma-entrega/quickstart.md).
 
+## Commits y hooks
+
+Los commits siguen **Conventional Commits con el módulo como alcance**: `tipo(alcance): descripción`, por ejemplo `feat(pedidos): crear pedidos con clave de idempotencia`. Tipos: feat, fix, docs, test, refactor, perf, build, ci, chore, style, revert. El alcance es obligatorio y debe ser un módulo (identidad, clientes, catalogo, promociones, carrito, pedidos, pagos, notificaciones, reportes) o un área (plataforma, infra, ci, deps, config, contratos, ui, web, api, worker, seguridad, calidad, metricas, observabilidad, release, docs, specs, speckit, arquitectura). La lista y las reglas están en `proyecto/commitlint.config.cjs`.
+
+`pnpm install` activa los hooks de Husky (`core.hooksPath`): **commit-msg** valida el mensaje y **pre-commit** revisa con Prettier y ESLint solo los archivos del índice, sin modificarlos ni guardar stash. Solo necesitan Node y las dependencias instaladas. Se pueden omitir con `git commit --no-verify` o `HUSKY=0`, pero el pipeline repite la comprobación de cada commit del PR (`scripts/ci/verify-commits.ts`), así que saltarse el hook solo retrasa el error.
+
+Verificar a mano que cada commit de tu rama es válido y verde por sí solo (instala y prueba cada uno en un checkout temporal, sin tocar tu rama):
+
+```powershell
+Set-Location proyecto
+corepack.cmd pnpm exec tsx ../scripts/ci/verify-commits.ts --repo .. --base main
+```
+
+Para que el PR se pueda integrar: rebase sobre `main` e historial lineal, sin commits de merge.
+
 ## Rutas para automatización futura
 
 Compose local ya existe (arriba). Todavía **no existen workflows ni configuración de proveedores**; deberán respetar estas rutas:
