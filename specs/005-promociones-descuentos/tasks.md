@@ -84,7 +84,7 @@ Rutas relativas a `proyecto/`; `promociones/` = `apps/api/src/modules/promocione
 ## Phase 7: Polish & transversal
 
 - [ ] T020 Auditoría: insertar en `promotions.promotion_changes` en cada cambio, con test de integración (FR-014) (LOCAL; dep. T008).
-- [ ] T021 Caché de vigentes en Redis con invalidación y TTL 60 s (`promociones/infraestructura/cache-vigentes.ts`), test de integración (R8) (LOCAL, Docker).
+- [x] T021 Caché de vigentes en Redis con invalidación y TTL 60 s (`promociones/infraestructura/cache-vigentes.ts`), test de integración (R8) (LOCAL, Docker).
 - [ ] T022 BLOQUEADO(2): `POST /admin/promociones/simular` (FR-013) sobre `cotizar` con `instante` futuro.
 - [ ] T023 BLOQUEADO(2): pantallas de administración (listar, crear, editar, simular) con `design-taste-frontend` + `frontend-design`, Playwright + axe, revisión AAA manual; requiere aprobación visual del equipo (SC-003).
 - [x] T024 Medir el motor con 50 unidades y 200 promociones (< 5 ms) y registrar el resultado en `specs/005-promociones-descuentos/evidence/rendimiento.md` (LOCAL). La prueba k6 de SC-005 se suma a la del Spec 1.
