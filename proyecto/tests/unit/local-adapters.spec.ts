@@ -40,7 +40,13 @@ const older = candidate('b');
 describe('entornos locales', () => {
   it('cada entorno tiene su proyecto y sus puertos, sin solaparse', () => {
     const all = Object.values(LOCAL_ENVIRONMENTS);
-    const ports = all.flatMap((item) => [item.web, item.api, item.postgres, item.redis]);
+    const ports = all.flatMap((item) => [
+      item.web,
+      item.api,
+      item.postgres,
+      item.redis,
+      item.mailpit,
+    ]);
     expect(new Set(ports).size).toBe(ports.length);
     expect(new Set(all.map((item) => item.project)).size).toBe(all.length);
     expect(LOCAL_ENVIRONMENTS.production.project).toBe('cafeteria-production');
@@ -55,6 +61,7 @@ describe('entornos locales', () => {
       item.api,
       item.postgres,
       item.redis,
+      item.mailpit,
     ]);
     expect(new Set(ports).size).toBe(ports.length);
     expect(
@@ -76,6 +83,7 @@ describe('entornos locales', () => {
       API_HOST_PORT: '5101',
       POSTGRES_HOST_PORT: '55100',
       REDIS_HOST_PORT: '54100',
+      MAILPIT_HOST_PORT: '53100',
     });
   });
 });

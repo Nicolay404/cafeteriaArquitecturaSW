@@ -52,6 +52,18 @@ services:
       retries: 30
       start_period: 15s
 
+  mailpit:
+    image: axllent/mailpit:v1.33.1@sha256:aef2aacc11f075ec0fb6874275ee4a421e688e11a96ebb296134d1735c7761ce
+    environment:
+      MP_SMTP_DISABLE_RDNS: 'true'
+    ports:
+      - '127.0.0.1:${MAILPIT_HOST_PORT:?MAILPIT_HOST_PORT requerida}:8025'
+    healthcheck:
+      test: ['CMD', '/mailpit', 'readyz']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
   api:
     image: ${API_IMAGE:?API_IMAGE requerida}
     environment: &app-environment
@@ -65,8 +77,14 @@ services:
       DATABASE_URL: postgresql://cafeteria_local:solo_pruebas_locales@postgres:5432/cafeteria_local
       REDIS_URL: redis://redis:6379
       RABBITMQ_URL: amqp://cafeteria_local:solo_pruebas_locales@rabbitmq:5672/cafeteria_local
-      SMTP_HOST: 127.0.0.1
+      SMTP_HOST: mailpit
       SMTP_PORT: '1025'
+      # Claves SOLO de este ensayo local (no empiezan por «solo_pruebas_locales», que la API rechaza
+      # fuera del entorno local). Nunca usarlas fuera: en una plataforma real vienen del gestor de secretos.
+      PII_KEY_1: ensayo_local_clave_pii_v1_no_usar_fuera_de_aqui
+      PII_INDEX_KEY: ensayo_local_clave_indice_correo_no_usar_fuera
+      SESSION_SECRET: ensayo_local_secreto_de_sesion_no_usar_fuera
+      HIBP_ENABLED: 'false'
       FEATURE_FLAGS_PREFIX: cafeteria:${APP_ENV}:flags
       METRICS_EXPORT_ENABLED: 'false'
     ports:
@@ -75,6 +93,7 @@ services:
       postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
       rabbitmq: { condition: service_healthy }
+      mailpit: { condition: service_healthy }
 
   worker:
     image: ${WORKER_IMAGE:?WORKER_IMAGE requerida}

@@ -21,6 +21,7 @@ export interface LocalEnvironment {
   api: number;
   postgres: number;
   redis: number;
+  mailpit: number;
 }
 
 /**
@@ -35,6 +36,7 @@ export function localEnvironments(base = 5100): Record<EnvironmentType, LocalEnv
       api: base + 1,
       postgres: base + 50_000,
       redis: base + 49_000,
+      mailpit: base + 48_000,
     },
     production: {
       project: 'cafeteria-production',
@@ -42,6 +44,7 @@ export function localEnvironments(base = 5100): Record<EnvironmentType, LocalEnv
       api: base + 101,
       postgres: base + 50_100,
       redis: base + 49_100,
+      mailpit: base + 48_100,
     },
     preview: {
       project: 'cafeteria-preview',
@@ -49,6 +52,7 @@ export function localEnvironments(base = 5100): Record<EnvironmentType, LocalEnv
       api: base + 201,
       postgres: base + 50_200,
       redis: base + 49_200,
+      mailpit: base + 48_200,
     },
   };
 }
@@ -143,6 +147,7 @@ export function stackVariables(
     WEB_HOST_PORT: String(settings.web),
     POSTGRES_HOST_PORT: String(settings.postgres),
     REDIS_HOST_PORT: String(settings.redis),
+    MAILPIT_HOST_PORT: String(settings.mailpit),
   };
 }
 
