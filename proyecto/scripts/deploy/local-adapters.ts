@@ -20,6 +20,7 @@ export interface LocalEnvironment {
   web: number;
   api: number;
   postgres: number;
+  redis: number;
 }
 
 /**
@@ -28,18 +29,26 @@ export interface LocalEnvironment {
  */
 export function localEnvironments(base = 5100): Record<EnvironmentType, LocalEnvironment> {
   return {
-    staging: { project: 'cafeteria-staging', web: base, api: base + 1, postgres: base + 50_000 },
+    staging: {
+      project: 'cafeteria-staging',
+      web: base,
+      api: base + 1,
+      postgres: base + 50_000,
+      redis: base + 49_000,
+    },
     production: {
       project: 'cafeteria-production',
       web: base + 100,
       api: base + 101,
       postgres: base + 50_100,
+      redis: base + 49_100,
     },
     preview: {
       project: 'cafeteria-preview',
       web: base + 200,
       api: base + 201,
       postgres: base + 50_200,
+      redis: base + 49_200,
     },
   };
 }
@@ -133,6 +142,7 @@ export function stackVariables(
     API_HOST_PORT: String(settings.api),
     WEB_HOST_PORT: String(settings.web),
     POSTGRES_HOST_PORT: String(settings.postgres),
+    REDIS_HOST_PORT: String(settings.redis),
   };
 }
 

@@ -187,8 +187,15 @@ describe('T050 — quién puede escribir', () => {
     expect(() => authorizeFlagWrite(local)).not.toThrow();
   });
 
+  test('se permite en el staging LOCAL, que tiene su Redis en loopback', () => {
+    expect(() => authorizeFlagWrite({ ...local, APP_ENV: 'staging' })).not.toThrow();
+  });
+
   test.each([
-    ['staging', { ...local, APP_ENV: 'staging' }],
+    [
+      'staging con un Redis remoto',
+      { ...local, APP_ENV: 'staging', REDIS_URL: 'redis://redis.ejemplo.test:6379' },
+    ],
     ['producción', { ...local, APP_ENV: 'production' }],
     [
       'un Redis remoto aunque diga local',

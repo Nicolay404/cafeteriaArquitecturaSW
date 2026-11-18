@@ -16,9 +16,11 @@ import { isMain, safeError } from './local-environment.js';
 const LOCAL_HOSTS = ['localhost', '127.0.0.1', '[::1]'];
 
 export function authorizeFlagWrite(environment: Environment) {
-  if (environment['APP_ENV'] !== 'local')
+  // «staging» solo existe como ensayo local (alcance-local.md): el Redis debe ser de loopback, como
+  // en local. Producción sigue prohibida: exigiría la identidad de un pipeline que aún no existe.
+  if (!['local', 'staging'].includes(environment['APP_ENV'] ?? ''))
     throw new Error(
-      'Escritura de flags no autorizada: fuera de local hace falta la identidad del pipeline (T055)',
+      'Escritura de flags no autorizada: fuera de local o del staging local hace falta la identidad del pipeline',
     );
   let host: string;
   try {
