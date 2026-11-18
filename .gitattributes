@@ -1,2 +1,6 @@
 # El workspace conserva LF incluso con core.autocrlf=true en Windows.
 proyecto/** text eol=lf
+
+# Los hooks son scripts de shell: con CRLF dejarían de ejecutarse en Linux y macOS.
+.husky/* text eol=lf
+*.sh text eol=lf
