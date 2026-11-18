@@ -84,6 +84,23 @@ export function url(
   return value;
 }
 
+export function integer(environment: Environment, variable: string, defaultValue?: number): number {
+  const value = environment[variable]?.trim();
+  if (!value) {
+    if (defaultValue !== undefined) return defaultValue;
+    throw new ConfigurationError(variable);
+  }
+  const numeric = Number(value);
+  if (!/^-?\d+$/.test(value) || !Number.isInteger(numeric)) {
+    throw new ConfigurationError(variable);
+  }
+  return numeric;
+}
+
+export function optional(environment: Environment, variable: string, defaultValue = ''): string {
+  return environment[variable]?.trim() ?? defaultValue;
+}
+
 export function base(environment: Environment) {
   return {
     nodeEnv: choice(environment, 'NODE_ENV', ['development', 'test', 'production'] as const),
