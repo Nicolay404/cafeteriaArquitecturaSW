@@ -1,11 +1,11 @@
-﻿import { readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
 
-// FR-006/007/008 y ConstituciÃ³n VI: umbral de calidad sobre el cÃ³digo NUEVO de cada PR.
-// Falla cerrado: la ausencia de un resultado (Sonar caÃ­do, informe vacÃ­o, mÃ©trica faltante,
-// anÃ¡lisis de otro commit) nunca significa aprobado. Bajar un umbral exige enmendar la constituciÃ³n.
+// FR-006/007/008 y Constitución VI: umbral de calidad sobre el código NUEVO de cada PR.
+// Falla cerrado: la ausencia de un resultado (Sonar caído, informe vacío, métrica faltante,
+// análisis de otro commit) nunca significa aprobado. Bajar un umbral exige enmendar la constitución.
 export const THRESHOLDS = {
   cobertura: 80,
   coberturaCritica: 95,
@@ -23,7 +23,7 @@ export type Rating = (typeof RATINGS)[number];
 export interface ResultadoCalidad {
   analysisId: string;
   sha: string;
-  /** Cobertura del cÃ³digo nuevo, 0â€“100. `null` = no disponible (p. ej. solo documentaciÃ³n). */
+  /** Cobertura del código nuevo, 0–100. `null` = no disponible (p. ej. solo documentación). */
   cobertura: number | null;
   bugs: number;
   vulnerabilidades: number;
@@ -44,7 +44,7 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 
 function percentage(value: unknown, name: string): number {
   if (typeof value !== 'number' || !Number.isFinite(value) || value < 0 || value > 100)
-    throw new Error(`${name} debe ser un nÃºmero entre 0 y 100`);
+    throw new Error(`${name} debe ser un número entre 0 y 100`);
   return value;
 }
 
@@ -56,7 +56,7 @@ function count(value: unknown, name: string): number {
 
 function rating(value: unknown, name: string): Rating {
   if (typeof value !== 'string' || !(RATINGS as readonly string[]).includes(value))
-    throw new Error(`${name} debe ser una calificaciÃ³n de A a E`);
+    throw new Error(`${name} debe ser una calificación de A a E`);
   return value as Rating;
 }
 
@@ -72,7 +72,7 @@ export function parseResultadoCalidad(input: unknown): ResultadoCalidad {
   if (coberturaModulos !== undefined) {
     if (!isRecord(coberturaModulos)) throw new Error('coberturaModulos debe ser un objeto');
     for (const [name, value] of Object.entries(coberturaModulos))
-      modules[name] = percentage(value, `Cobertura del mÃ³dulo ${name}`);
+      modules[name] = percentage(value, `Cobertura del módulo ${name}`);
   }
   return {
     analysisId,
@@ -105,12 +105,12 @@ export function evaluarCalidad(
   const noAplica: string[] = [];
   if (resultado.sha !== contexto.sha)
     razones.push(
-      `El anÃ¡lisis corresponde a otro commit (${resultado.sha.slice(0, 7)}), no a ${contexto.sha.slice(0, 7)}`,
+      `El análisis corresponde a otro commit (${resultado.sha.slice(0, 7)}), no a ${contexto.sha.slice(0, 7)}`,
     );
 
   if (contexto.soloDocumentacion) noAplica.push('cobertura');
   else if (resultado.cobertura === null)
-    razones.push('Cobertura sin dato en un cambio de cÃ³digo: no se da por buena');
+    razones.push('Cobertura sin dato en un cambio de código: no se da por buena');
   else if (resultado.cobertura < THRESHOLDS.cobertura)
     razones.push(`Cobertura nueva ${resultado.cobertura} % < ${THRESHOLDS.cobertura} %`);
 
@@ -119,35 +119,35 @@ export function evaluarCalidad(
       if (!(THRESHOLDS.modulosCriticos as readonly string[]).includes(modulo)) continue;
       const valor = resultado.coberturaModulos[modulo];
       if (valor === undefined)
-        razones.push(`MÃ³dulo crÃ­tico ${modulo} modificado sin dato de cobertura`);
+        razones.push(`Módulo crítico ${modulo} modificado sin dato de cobertura`);
       else if (valor < THRESHOLDS.coberturaCritica)
         razones.push(
-          `Cobertura del mÃ³dulo ${modulo} ${valor} % < ${THRESHOLDS.coberturaCritica} %`,
+          `Cobertura del módulo ${modulo} ${valor} % < ${THRESHOLDS.coberturaCritica} %`,
         );
     }
 
   if (resultado.bugs > THRESHOLDS.bugs)
-    razones.push(`Bugs nuevos: ${resultado.bugs} (mÃ¡ximo ${THRESHOLDS.bugs})`);
+    razones.push(`Bugs nuevos: ${resultado.bugs} (máximo ${THRESHOLDS.bugs})`);
   if (resultado.vulnerabilidades > THRESHOLDS.vulnerabilidades)
     razones.push(
-      `Vulnerabilidades nuevas: ${resultado.vulnerabilidades} (mÃ¡ximo ${THRESHOLDS.vulnerabilidades})`,
+      `Vulnerabilidades nuevas: ${resultado.vulnerabilidades} (máximo ${THRESHOLDS.vulnerabilidades})`,
     );
   if (resultado.hotspotsRevisados < THRESHOLDS.hotspotsRevisados)
     razones.push(
-      `Hotspots de seguridad revisados: ${resultado.hotspotsRevisados} % (mÃ­nimo ${THRESHOLDS.hotspotsRevisados} %)`,
+      `Hotspots de seguridad revisados: ${resultado.hotspotsRevisados} % (mínimo ${THRESHOLDS.hotspotsRevisados} %)`,
     );
   if (resultado.duplicacion >= THRESHOLDS.duplicacionMaxima)
     razones.push(
-      `DuplicaciÃ³n ${resultado.duplicacion} % (debe ser menor que ${THRESHOLDS.duplicacionMaxima} %)`,
+      `Duplicación ${resultado.duplicacion} % (debe ser menor que ${THRESHOLDS.duplicacionMaxima} %)`,
     );
   for (const [nombre, valor] of Object.entries(resultado.ratings))
     if (valor !== THRESHOLDS.rating)
-      razones.push(`CalificaciÃ³n de ${nombre} ${valor} (mÃ­nimo ${THRESHOLDS.rating})`);
+      razones.push(`Calificación de ${nombre} ${valor} (mínimo ${THRESHOLDS.rating})`);
 
   return { aprobado: razones.length === 0, razones, noAplica };
 }
 
-/** Sonar entrega las calificaciones como 1.0â€“5.0. */
+/** Sonar entrega las calificaciones como 1.0–5.0. */
 const RATING_BY_NUMBER: Record<string, Rating> = {
   '1': 'A',
   '2': 'B',
@@ -175,12 +175,12 @@ export function fromSonarMeasures(input: {
   };
   const required = (metric: string): string => {
     const value = read(metric);
-    if (value === undefined) throw new Error(`MÃ©trica ausente en el informe de Sonar: ${metric}`);
+    if (value === undefined) throw new Error(`Métrica ausente en el informe de Sonar: ${metric}`);
     return value;
   };
   const toRating = (metric: string): Rating => {
     const mapped = RATING_BY_NUMBER[String(Math.trunc(Number(required(metric))))];
-    if (!mapped) throw new Error(`CalificaciÃ³n invÃ¡lida en ${metric}`);
+    if (!mapped) throw new Error(`Calificación inválida en ${metric}`);
     return mapped;
   };
   const coverage = read('new_coverage');
@@ -201,7 +201,7 @@ export function fromSonarMeasures(input: {
   });
 }
 
-// ---- Seguridad: secretos y vulnerabilidades altas o crÃ­ticas bloquean ----
+// ---- Seguridad: secretos y vulnerabilidades altas o críticas bloquean ----
 
 export function contarHallazgosGitleaks(informe: unknown): number {
   if (!Array.isArray(informe)) throw new Error('El informe de Gitleaks debe ser una lista');
@@ -212,7 +212,7 @@ export function contarHallazgosTrivy(informe: unknown): number {
   if (!isRecord(informe)) throw new Error('El informe de Trivy debe ser un objeto');
   const results = informe['Results'];
   if (results === undefined || results === null) return 0;
-  if (!Array.isArray(results)) throw new Error('El informe de Trivy tiene Results invÃ¡lido');
+  if (!Array.isArray(results)) throw new Error('El informe de Trivy tiene Results inválido');
   let total = 0;
   for (const result of results) {
     const found = isRecord(result) ? result['Vulnerabilities'] : undefined;
@@ -236,7 +236,7 @@ export function evaluarSeguridad(
   const razones: string[] = [];
   if (hallazgos.secretos > 0) razones.push(`Secretos detectados: ${hallazgos.secretos}`);
   if (hallazgos.altasCriticas > 0)
-    razones.push(`Vulnerabilidades altas o crÃ­ticas: ${hallazgos.altasCriticas}`);
+    razones.push(`Vulnerabilidades altas o críticas: ${hallazgos.altasCriticas}`);
   return { aprobado: razones.length === 0, razones, noAplica: [] };
 }
 
@@ -264,14 +264,14 @@ export function evaluarEjecuciones(intentos: Intento[]): EvaluacionEjecuciones {
       estado: 'ausente',
       aprobado: false,
       fallosOriginales: [],
-      razones: ['Sin ejecuciones registradas: no hay aprobaciÃ³n'],
+      razones: ['Sin ejecuciones registradas: no hay aprobación'],
     };
   if (ultimo.resultado === 'fallido')
     return {
       estado: 'fallido',
       aprobado: false,
       fallosOriginales: fallos,
-      razones: fallos.map((item) => `Intento ${item.intento} fallÃ³: ${item.causa ?? 'sin causa'}`),
+      razones: fallos.map((item) => `Intento ${item.intento} falló: ${item.causa ?? 'sin causa'}`),
     };
   if (fallos.length > 0) {
     const primero = fallos[0]!;
@@ -280,7 +280,7 @@ export function evaluarEjecuciones(intentos: Intento[]): EvaluacionEjecuciones {
       aprobado: false,
       fallosOriginales: fallos,
       razones: [
-        `Fallo intermitente: el intento ${primero.intento} fallÃ³ (${primero.causa ?? 'sin causa'}) y un reintento pasÃ³; investÃ­galo antes de integrar`,
+        `Fallo intermitente: el intento ${primero.intento} falló (${primero.causa ?? 'sin causa'}) y un reintento pasó; investígalo antes de integrar`,
       ],
     };
   }
@@ -309,7 +309,7 @@ function main() {
       trivy: { type: 'string' },
     },
   });
-  if (!values.sha) throw new Error('Falta --sha: el commit que se evalÃºa');
+  if (!values.sha) throw new Error('Falta --sha: el commit que se evalúa');
   const razones: string[] = [];
   let aprobado = true;
   const apply = (evaluacion: Evaluacion) => {
@@ -322,12 +322,12 @@ function main() {
   try {
     if (values.result) resultado = parseResultadoCalidad(readJson(values.result, 'el resultado'));
     else if (values.measures) {
-      const raw = readJson(values.measures, 'las mÃ©tricas');
-      if (!isRecord(raw)) throw new Error('Las mÃ©tricas de Sonar deben ser un objeto');
+      const raw = readJson(values.measures, 'las métricas');
+      if (!isRecord(raw)) throw new Error('Las métricas de Sonar deben ser un objeto');
       resultado = fromSonarMeasures(raw as Parameters<typeof fromSonarMeasures>[0]);
     }
   } catch (error) {
-    razones.push(error instanceof Error ? error.message : 'Resultado de Sonar no vÃ¡lido');
+    razones.push(error instanceof Error ? error.message : 'Resultado de Sonar no válido');
     aprobado = false;
   }
   if (aprobado || resultado)
@@ -352,7 +352,7 @@ function main() {
         }),
       );
     } catch (error) {
-      razones.push(error instanceof Error ? error.message : 'Informe de seguridad no vÃ¡lido');
+      razones.push(error instanceof Error ? error.message : 'Informe de seguridad no válido');
       aprobado = false;
     }
   }
