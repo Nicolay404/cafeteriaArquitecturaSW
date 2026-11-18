@@ -1,8 +1,23 @@
-# OSV-Scanner: sin excepciones. Las vulnerabilidades altas o críticas bloquean el merge
-# (constitución II). Si el equipo aprueba una excepción, debe ser TEMPORAL y quedar aquí con
-# motivo y fecha de caducidad, por ejemplo:
+# OSV-Scanner: las vulnerabilidades altas y críticas bloquean el merge (constitución II).
 #
-# [[IgnoredVulns]]
-# id = "GHSA-xxxx-xxxx-xxxx"
-# ignoreUntil = 2026-12-31
-# reason = "Solo afecta a una herramienta de desarrollo; sin parche publicado. Aprobada por el equipo el AAAA-MM-DD."
+# EXCEPCIONES TEMPORALES aprobadas por el líder del equipo (Nicolay) el 2026-11-18, pendientes de
+# confirmar con el resto del equipo. Caducan el 2026-12-18: pasada esa fecha OSV vuelve a
+# bloquear y obliga a revisarlas (actualizar la dependencia o renovar la excepción con motivo).
+# Cubren SOLO estas tres alertas concretas: cualquier otra vulnerabilidad sigue bloqueando.
+# Las tres afectan únicamente a herramientas de desarrollo (Jest, Vite, Testcontainers); ninguna
+# viaja con la aplicación. Detalle y verificación: specs/001-plataforma-entrega/decisions/platform-baseline.md (H-06).
+
+[[IgnoredVulns]]
+id = "GHSA-fc5q-39xc-vjpf"
+ignoreUntil = 2026-12-18
+reason = "picomatch <= 4.0.7 (ReDoS, alta). Sin versión corregida publicada. Solo la usan Jest y Vite en desarrollo y CI con patrones escritos por nosotros."
+
+[[IgnoredVulns]]
+id = "GHSA-3g3m-2fjr-6pw4"
+ignoreUntil = 2026-12-18
+reason = "glob (media). Corregida en glob 14.0.2, que traen como dependencia transitiva Testcontainers y Jest; se resuelve cuando estos actualicen. La constitución solo bloquea altas y críticas."
+
+[[IgnoredVulns]]
+id = "GHSA-g3hv-75wg-m249"
+ignoreUntil = 2026-12-18
+reason = "minimatch (media). Corregida en minimatch 11.0.1, que traen glob y Jest; se resuelve cuando estos actualicen. La constitución solo bloquea altas y críticas."

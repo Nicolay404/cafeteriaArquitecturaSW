@@ -87,3 +87,9 @@ Los workflows de T028 corrieron por primera vez. **Pasaron:** commits uno a uno 
 | Agregados | Fallan porque dependen de los anteriores | Esperado |
 
 El aviso de que el comentario en el PR no se pudo escribir era un permiso de solo lectura del token; se desactivan los comentarios de Gitleaks. Esto cumple por primera vez, con datos reales, el comportamiento "fail-closed" que T028 solo había validado con actionlint.
+
+## Resolución de H-06 y estado final de los checks del PR #4 (2026-11-18)
+
+Se aprobó una **excepción temporal** (el líder, pendiente de confirmar con el equipo): `osv-scanner.toml` ignora hasta el **2026-12-18** solo las alertas GHSA-fc5q-39xc-vjpf (picomatch, alta, sin parche), GHSA-3g3m-2fjr-6pw4 (glob, media) y GHSA-g3hv-75wg-m249 (minimatch, media), todas de herramientas de desarrollo. OSV falla ante cualquier severidad, por eso se incluyen las medias; la constitución solo bloquea altas y críticas. Verificado en local con OSV-Scanner 2.7.0: con la excepción vigente `No issues found`; con la fecha vencida vuelve a fallar con los 6 hallazgos (control negativo). Cualquier otra vulnerabilidad nueva sigue bloqueando.
+
+**Sonar:** Quality Gate OK en el PR #4 (cobertura nueva 93,3 %, calificaciones A, duplicación 0 %, hotspots 100 %). Para llegar ahí se corrigieron dos `path traversal` reales (CLI con rutas libres) y la cobertura de los CLI. **Antes de caducar la excepción:** comprobar si salió el parche de picomatch o actualizar Jest/Testcontainers.
