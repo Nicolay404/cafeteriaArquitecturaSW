@@ -44,4 +44,4 @@ El hueco que dejó la primera tanda se cerró con `proyecto/scripts/ci/check-att
 
 Sin el detector, ese PR habría quedado verde y fusionable. **Falla cerrado:** una API sin respuesta, sin permiso o con configuración inválida bloquea. Las pruebas unitarias (19) cubren intermitente, fallo persistente, controles cancelados u omitidos, varios controles a la vez, errores de la API y variables de entorno incorrectas; la mutación de la comparación, del rango de intentos y de la condición del primer intento hace fallar las pruebas.
 
-**Límite:** un reintento sin fallos previos (control positivo) se probó con datos simulados, no aún con un run real de GitHub con el detector incluido.
+**Control positivo en GitHub (PR #13):** al reintentar el run completo, sin fallos previos, el detector corrió en los dos workflows (intento 2) y **pasó**: los pasos «Instalar herramientas…» y «Bloquear los fallos intermitentes…» terminaron en éxito. Así queda probado en real tanto el bloqueo como el no-bloqueo. Un primer intento de este control usó por error un run anterior a mis cambios (sin el detector) y no se cuenta como evidencia.
