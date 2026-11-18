@@ -1,6 +1,6 @@
 # Verificación desde clon limpio — Spec #1
 
-**Estado:** T001–T015 verificadas bajo `proyecto/`: configuración, Compose local, API de salud, worker técnico, inicio básico y proxy web runtime. Build web y suites locales probados; ver evidence/t011-health.md, evidence/t012-worker-pending.md y evidence/t013-t014-web.md. El arranque coordinado y infra:check de T015 están disponibles; E2E y cloud del flujo completo siguiente siguen pendientes. No desplegar desde equipos personales ni interpretar la base funcional como diseño final aprobado.
+**Estado:** T001–T016 verificadas bajo `proyecto/`: configuración, Compose local, API de salud, worker técnico, inicio básico y proxy web runtime. Build web y suites locales probados; ver evidence/t011-health.md, evidence/t012-worker-pending.md y evidence/t013-t014-web.md. El arranque coordinado y infra:check de T015 están disponibles; E2E y cloud del flujo completo siguiente siguen pendientes. No desplegar desde equipos personales ni interpretar la base funcional como diseño final aprobado.
 
 ## Prerrequisitos y configuración
 
@@ -78,10 +78,13 @@ pnpm format:check
 pnpm typecheck
 pnpm test:unit
 pnpm test:integration
+pnpm coverage:merge
 pnpm build
 pnpm exec playwright install chromium
 pnpm test:e2e
 ```
+
+`test:e2e` arranca `pnpm dev` como webServer (con Compose ya levantado; `E2E_ENV_FILE=.env.example` usa ese archivo explícito). `test:smoke` no arranca nada y exige `SMOKE_WEB_URL` y `SMOKE_API_URL`. `coverage:merge` deja un único `coverage/lcov.info` a partir de los informes de unitarios e integración. Hasta T018 no existen especificaciones E2E/smoke, así que ambos comandos terminan con «No tests found» (evidence/t016-quality-scripts.md).
 
 Esperado: salida 0, reportes y cobertura no vacía donde exista comportamiento. Testcontainers levanta Postgres/Redis/RabbitMQ reales con puertos propios y limpia sus recursos. Playwright verifica inicio, foto, ancla informativa y salud web→API, sin flujos futuros. Axe sin violaciones no demuestra AAA completa.
 

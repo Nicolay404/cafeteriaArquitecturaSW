@@ -22,3 +22,9 @@ minimumReleaseAgeExclude:
   - '@typescript-eslint/visitor-keys@8.73.0'
   - typescript-eslint@8.73.0
   - amqplib@2.4.0
+allowBuilds:
+  '@parcel/watcher': false
+  cpu-features: false
+  esbuild: false
+  protobufjs: false
+  ssh2: false

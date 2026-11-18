@@ -5,7 +5,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Estado del repositorio
 
-Proyecto en fase inicial: todavía no hay código, ni sistema de build, ni tests. Aún no existen comandos de build/lint/test; cuando se elija el stack y se haga el scaffolding, documéntalos aquí (incluido cómo ejecutar un solo test).
+Monorepo pnpm/Turborepo en `proyecto/` (Spec #1 en curso). Comandos desde `proyecto/` (en Windows, `corepack.cmd pnpm` o los shims temporales de `specs/001-plataforma-entrega/decisions/runtime.md`):
+
+- `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm build`
+- `pnpm test:unit` (Vitest config/web + Jest API/worker), `pnpm test:integration` (Testcontainers, requiere Docker), `pnpm coverage:merge`
+- `pnpm test:e2e` / `pnpm test:smoke` (Playwright; smoke exige `SMOKE_WEB_URL` y `SMOKE_API_URL`)
+- `pnpm dev`, `pnpm infra:check`, `pnpm env:check` (con `--env-file .env.example` si no hay `.env`)
+- Un solo test: `pnpm exec vitest run tests/unit/config.spec.ts`, `pnpm test:integration --runTestsByPath tests/integration/web.int.spec.ts`, `node --experimental-vm-modules node_modules/jest/bin/jest.js --config tests/unit/jest.config.ts apps/api/src/platform/health.controller.spec.ts`
 
 - `.specify/memory/constitution.md`: **constitución del proyecto** (principios I–VII no negociables). Prevalece sobre cualquier otro documento. Flujo Spec Kit: `/speckit-specify` → `/speckit-clarify` → `/speckit-plan` → `/speckit-tasks` → `/speckit-implement`; los specs viven en `specs/NNN-nombre/`.
 - `promtp.md` (el nombre del archivo tiene esa errata): la especificación del producto. Es la fuente de verdad de los requisitos (RF-xx, RNF-xx), del stack y de la arquitectura objetivo (monolito modular en NestJS con outbox + cola, Redis, PostgreSQL); léela antes de diseñar o implementar.
