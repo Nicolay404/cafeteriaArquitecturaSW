@@ -79,6 +79,48 @@ export function Field({
   );
 }
 
+/** Casilla con etiqueta visible; el texto puede llevar un enlace (p. ej. a la política de privacidad). */
+export function Checkbox({
+  id,
+  name,
+  label,
+  error,
+  checked,
+  onChange,
+}: {
+  id: string;
+  name: string;
+  label: ReactNode;
+  error?: string | undefined;
+  checked?: boolean;
+  onChange?: ChangeEventHandler<HTMLInputElement>;
+}) {
+  const errorId = error ? `${id}-error` : undefined;
+  return (
+    <div className="campo">
+      <div className="campo-casilla">
+        <input
+          id={id}
+          name={name}
+          type="checkbox"
+          aria-invalid={error ? true : undefined}
+          aria-describedby={errorId}
+          {...(checked !== undefined ? { checked } : {})}
+          {...(onChange ? { onChange } : {})}
+        />
+        <label htmlFor={id}>{label}</label>
+      </div>
+      {error ? (
+        <p id={errorId} className="campo-error">
+          <span aria-hidden="true">⚠ </span>
+          <span className="solo-lectores">Error: </span>
+          {error}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 /** Contraseña con botón para mostrarla u ocultarla: se puede revisar lo escrito antes de enviarlo. */
 export function PasswordField(props: Omit<FieldProps, 'type'>) {
   const [visible, setVisible] = useState(false);
