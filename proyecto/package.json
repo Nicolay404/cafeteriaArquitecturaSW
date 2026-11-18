@@ -52,6 +52,7 @@
     "infra:check": "tsx scripts/infra-check.ts",
     "prepare": "cd .. && husky",
     "flags:set": "tsx scripts/flags-set.ts",
-    "db:migrate": "tsx scripts/db/migrate.ts"
+    "db:migrate": "tsx scripts/db/migrate.ts",
+    "candidate:package": "tsx scripts/ci/package-candidate.ts"
   }
 }
