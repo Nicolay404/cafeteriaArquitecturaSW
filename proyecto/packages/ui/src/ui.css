@@ -104,16 +104,23 @@ body:has(.cuenta) {
   gap: 0.75rem;
   align-items: flex-start;
 }
-.campo-casilla input {
+/* Más específico que «.campo input» (que ocupa todo el ancho): la casilla mide lo suyo y la
+   etiqueta toma el resto de la fila. */
+.campo .campo-casilla input {
   flex: none;
+  box-sizing: border-box;
   width: 1.75rem;
   min-height: 1.75rem;
   height: 1.75rem;
-  margin: 0.125rem 0 0;
+  margin: 0.5rem 0 0;
+  padding: 0;
   accent-color: var(--cafe);
 }
-.campo-casilla label {
+.campo .campo-casilla label {
+  flex: 1;
+  min-width: 0;
   margin: 0;
+  padding-block: 0.5rem;
   font-weight: 400;
 }
 
