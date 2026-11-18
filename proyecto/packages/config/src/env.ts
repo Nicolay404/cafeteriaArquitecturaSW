@@ -11,7 +11,7 @@ export interface ConfigInput {
 
 export class ConfigurationError extends Error {
   constructor(variable: string) {
-    super(`ConfiguraciÃ³n invÃ¡lida: ${variable}`);
+    super(`Configuración inválida: ${variable}`);
     this.name = 'ConfigurationError';
   }
 }
